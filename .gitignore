@@ -1,0 +1,10 @@
+# weights and generated data stay out of git
+checkpoints/
+data/
+runs/
+*.pt
+*.safetensors
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
