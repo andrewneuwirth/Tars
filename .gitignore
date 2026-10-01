@@ -8,3 +8,17 @@ __pycache__/
 *.pyc
 .venv/
 .DS_Store
+
+# brain/: the author's live Tars service + training. Private runtime data stays out.
+brain/logs/
+brain/face/
+brain/train/data/
+brain/train/r4/data/
+brain/train/r4/real_said.txt
+brain/train/runs/
+brain/train/**/*.log
+brain/train/**/*.out
+brain/train/**/eval_report.json
+brain/train/round3_report.json
+brain/train/calibration_rejected.json
+__pycache__/
