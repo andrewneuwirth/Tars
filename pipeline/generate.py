@@ -74,7 +74,7 @@ def skill_list(keys: list[str] | None = None) -> str:
 
 
 def ask(prompt: str) -> str:
-    r = subprocess.run([CLAUDE, "-p", "--tools", "", "--strict-mcp-config"], input=prompt, capture_output=True,
+    r = subprocess.run([CLAUDE, "-p", "--tools", "", "--strict-mcp-config", "--no-session-persistence"], input=prompt, capture_output=True,
                        text=True, timeout=600)
     if r.returncode != 0:
         raise RuntimeError(r.stderr[-400:])
