@@ -41,8 +41,8 @@
   },
   "tars": {
     "name": "Tars 0.5",
-    "repo": "andrewneuwirth/tars",
-    "revision": "main"
+    "repo": "aneuwirth/tars",
+    "revision": "037fdd38e0bd89db64c8f40044a3a2883f8cea4d"
   },
   "modelFiles": [
     "config.json",

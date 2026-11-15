@@ -18,7 +18,7 @@ cp "$CKPT"/{config.json,tokenizer.json,tokenizer_config.json,marker_calibration.
 cp hf/README.md "$STAGE/README.md"
 cp NOTICE LICENSE "$STAGE/"
 echo "Uploading $(du -sh "$STAGE" | cut -f1) to https://huggingface.co/$REPO"
-hf repo create "$REPO" --repo-type model --exist-ok
+hf repos create "$REPO" --type model --public --exist-ok
 NAME=$(plutil -extract tars.name raw app/Resources/training-manifest.json)
 hf upload "$REPO" "$STAGE" . --commit-message "$NAME"
 SHA=$(curl -fsS "https://huggingface.co/api/models/$REPO/revision/main" | python3 -c 'import json,sys; print(json.load(sys.stdin)["sha"])')

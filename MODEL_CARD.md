@@ -17,7 +17,7 @@ since it only knows the example catalog's skills well.
 | Fine-tuning | Full fine-tune (encoder and scoring head) |
 | Size | 395M parameters, about 2.9 GB on disk with tokenizer and calibration |
 | License | Apache-2.0 |
-| Weights | Not stored in this repository. Published on Hugging Face at the repo in `app/Resources/training-manifest.json` (`tars.repo`, huggingface.co/andrewneuwirth/tars) with `hf/publish.sh`; or train your own with `pipeline/` or the Tars app. |
+| Weights | Not stored in this repository. Published on Hugging Face at the repo in `app/Resources/training-manifest.json` (`tars.repo`, huggingface.co/aneuwirth/tars) with `hf/publish.sh`; or train your own with `pipeline/` or the Tars app. |
 
 ## Intended use
 
