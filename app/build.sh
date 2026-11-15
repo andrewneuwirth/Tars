@@ -47,12 +47,16 @@ mkdir -p "$APP/Contents/Helpers"
 tar xzf "$UV_TGZ" -C "$APP/Contents/Helpers" --strip-components 1 uv-aarch64-apple-darwin/uv   # drawn once with Kit's tools/icon-tile.swift (4f6bd8, point.3.filled.connected.trianglepath.dotted)
 echo -n "APPL????" > "$APP/Contents/PkgInfo"
 
+# Sparkle (updates): embedded and its helpers signed inside-out before the app, see Kit's docs/updates.md.
+KIT=../Kit; [ -d "$KIT" ] || KIT=.build/checkouts/mac-tools-kit
+
 IDENTITY=${SIGN_IDENTITY:-}
 if [ "$RELEASE" = 1 ]; then
   [ -n "$IDENTITY" ] || IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null | grep "Developer ID Application" | head -1 | sed -E 's/.*"(.*)"/\1/')
   [ -n "$IDENTITY" ] || { echo "No Developer ID Application identity in the keychain" >&2; exit 1; }
   echo "==> Signing for release with $IDENTITY"
   codesign --force --options runtime --timestamp --sign "$IDENTITY" "$APP/Contents/Helpers/uv"
+  "$KIT/tools/embed-sparkle.sh" "$APP" "$IDENTITY" --release
   codesign --force --options runtime --timestamp --sign "$IDENTITY" "$APP"
   codesign --verify --strict --verbose=2 "$APP"
   echo "Built $APP (release)"; exit 0
@@ -61,10 +65,12 @@ fi
 if [ -n "$IDENTITY" ]; then
   echo "==> Signing with $IDENTITY"
   codesign --force --options runtime --sign "$IDENTITY" "$APP/Contents/Helpers/uv"
+  "$KIT/tools/embed-sparkle.sh" "$APP" "$IDENTITY"
   codesign --force --options runtime --sign "$IDENTITY" "$APP"
 else
   echo "==> No Apple Development identity; ad-hoc signing (permissions must be re-granted after each build)"
   codesign --force --sign - "$APP/Contents/Helpers/uv"
+  "$KIT/tools/embed-sparkle.sh" "$APP" -
   codesign --force --sign - "$APP"
 fi
 

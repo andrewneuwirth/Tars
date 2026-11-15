@@ -1,5 +1,5 @@
 {
-  "originHash" : "47d8b0ae0404aa4b480583ef0e9e4c92bf3985037da9dee81cebf37e4eee968a",
+  "originHash" : "2c461df7fe7b52e40cb317cd93b1b7638197829f116dfcd220804e1971cbf55e",
   "pins" : [
     {
       "identity" : "mac-tools-kit",
@@ -7,7 +7,16 @@
       "location" : "https://github.com/andrewneuwirth/mac-tools-kit.git",
       "state" : {
         "branch" : "main",
-        "revision" : "7c568ed50b82ee46f6fe9c4874dddd23152cc33d"
+        "revision" : "3453bfe1f8ec984d2148e64739df15b0fd48c104"
+      }
+    },
+    {
+      "identity" : "sparkle",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sparkle-project/Sparkle",
+      "state" : {
+        "revision" : "ab7d71291238df6e0492143b120c9b696a35f603",
+        "version" : "2.10.1"
       }
     }
   ],

@@ -1,4 +1,5 @@
 import SwiftUI
+import MacToolsUpdates
 
 if CommandLine.arguments.contains("--self-check") {
     MainActor.assumeIsolated { SelfCheck.run() }
@@ -67,6 +68,8 @@ enum Headless {
 struct TarsApp: App {
     @State private var app = AppModel(demo: CommandLine.arguments.contains("--demo"))
 
+    init() { AppUpdater.start() }
+
     var body: some Scene {
         Window("Tars", id: "main") {
             RootView(app: app)
@@ -74,5 +77,6 @@ struct TarsApp: App {
         }
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 1200, height: 820)
+        .commands { CommandGroup(after: .appInfo) { CheckForUpdatesButton() } }
     }
 }

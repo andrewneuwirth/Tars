@@ -1,5 +1,6 @@
 import SwiftUI
 import MacToolsKit
+import MacToolsUpdates
 
 struct SettingsView: View {
     @Bindable var app: AppModel
@@ -11,7 +12,7 @@ struct SettingsView: View {
     @State private var tick = 0   // re-reads statuses after a key is saved
 
     var body: some View {
-        Page(title: "Settings", subtitle: "Training setup, and the AI providers that write labels.") {
+        Page(title: "Settings", subtitle: "Training setup, the AI providers that write labels, and updates.") {
             SectionHeader(title: "Training")
             SetupCard(installer: app.installer)
             Card(title: "Start from \(Manifest.shared.tars.name)") { TarsWeightsRow(app: app) }
@@ -37,6 +38,8 @@ struct SettingsView: View {
                 }
                 .id(tick)
             }
+            SectionHeader(title: "Updates").padding(.top, 6)
+            UpdatesCard()
             SectionHeader(title: "Advanced").padding(.top, 6)
             Card {
                 SettingRow(title: "Use my own environment", detail: "A Tars checkout, Python and Von I manage myself.", last: !useOwn) {
@@ -53,6 +56,21 @@ struct SettingsView: View {
                     Image(systemName: "folder").font(.ui(11.5)).foregroundStyle(Look.muted)
                     Text("Your data: \((Files.root.path as NSString).abbreviatingWithTildeInPath)").font(.ui(12)).foregroundStyle(Look.muted).textSelection(.enabled)
                 }
+            }
+        }
+    }
+}
+
+/// Kit's updater (Sparkle) in Tars's own rows.
+struct UpdatesCard: View {
+    @ObservedObject private var updates = AppUpdater.shared
+    var body: some View {
+        Card {
+            SettingRow(title: "Check for updates automatically", detail: "Once a day. Tars asks before installing a new version.") {
+                DSwitch(label: "Check for updates automatically", on: $updates.automaticallyChecks)
+            }
+            SettingRow(title: "Version \(Sidebar.version)", detail: updates.lastCheckedText, last: true) {
+                Button("Check Now") { updates.checkNow() }.buttonStyle(DButton(small: true)).disabled(!updates.canCheck)
             }
         }
     }

@@ -17,7 +17,7 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "Tars",
-            dependencies: [.product(name: "MacToolsKit", package: kitPackage)],
+            dependencies: [.product(name: "MacToolsKit", package: kitPackage), .product(name: "MacToolsUpdates", package: kitPackage)],
             path: "Sources/Tars",
             swiftSettings: [.swiftLanguageMode(.v5)]
         ),

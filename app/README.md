@@ -42,7 +42,7 @@ About 3.4 GB in total, about 4 GB on disk. It shows progress, can be cancelled, 
 Afterwards training runs offline (`HF_HUB_OFFLINE=1`). Everything pinned lives in
 `Resources/training-manifest.json`.
 
-Optional: **Download Tars 0.4** (Settings) fetches the fine-tuned Tars weights from the Hugging Face repo named in the
+Optional: **Download Tars 0.5** (Settings) fetches the fine-tuned Tars weights from the Hugging Face repo named in the
 manifest (`tars.repo`) so training can start from Tars instead of Von 1.2.
 
 **Advanced** (Settings): use your own checkout, Python and Von instead.
