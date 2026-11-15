@@ -1,0 +1,10 @@
+# The managed training environment (pinned in requirements.lock with hashes). Von's own dependencies
+# (github.com/wfzyx/von pyproject.toml) plus what Tars uses; Von itself is downloaded as source at a pinned commit.
+torch==2.14.0
+transformers==5.17.0
+accelerate
+pydantic
+fastapi
+uvicorn
+click
+httpx

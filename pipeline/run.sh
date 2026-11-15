@@ -13,8 +13,9 @@ export PYTORCH_MPS_HIGH_WATERMARK_RATIO=${MPS_HIGH:-0.6} PYTORCH_MPS_LOW_WATERMA
 PY=${PYTHON:-python}
 CATALOG=${CATALOG:-catalogs/example.json}
 st() { "$PY" pipeline/status.py stage "$@"; }
-mkdir -p runs
-LOG=${RUN_LOG:-runs/run_$(date +%Y%m%d-%H%M%S).log}
+RUNS=${TARS_RUNS:-runs}   # the Tars app points this outside its (read-only) bundle
+mkdir -p "$RUNS"
+LOG=${RUN_LOG:-$RUNS/run_$(date +%Y%m%d-%H%M%S).log}
 fail() { st failed "$1"; echo "FAILED: $1"; exit 1; }
 trap 'st stopped "Stopped"; exit 130' INT TERM
 {

@@ -7,6 +7,8 @@ final class AppModel {
     var labels: [Labeled] = []
     let generator = Generator()
     let trainer = Trainer()
+    let installer = Installer()
+    let tarsWeights = Installer()
     let demo: Bool
     private var labelsDate: Date?
     private var watcher: Timer?

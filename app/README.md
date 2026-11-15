@@ -25,14 +25,31 @@ compare your model with the base model.
 Your data lives in `~/Library/Application Support/Tars` (catalog.json, labels.jsonl, training data, runs,
 checkpoints).
 
+## Everything needed to train comes with the app
+
+The app bundles the training code (`pipeline/`, `tars/`, the example catalog) and
+[uv](https://github.com/astral-sh/uv) (MIT OR Apache-2.0, licenses in `Contents/Resources/third-party/uv`). The first
+time you train, **Set Up Training** downloads, once, into `~/Library/Application Support/Tars`:
+
+| What | From | Pinned by | Download |
+|---|---|---|---|
+| CPython 3.12.16 | uv's managed Python builds | version | ~20 MB |
+| PyTorch, transformers and the rest | PyPI | `Resources/requirements.lock` (versions and sha256 hashes) | ~170 MB |
+| Von's source (model class, training collator and loss, replay generator) | github.com/wfzyx/von | commit, plus sha256 of every Python file used | ~4 MB |
+| Von 1.2 base model | [huggingface.co/wfzyx/von](https://huggingface.co/wfzyx/von) (Von's official weights, Apache-2.0) | revision, each file checked against the repo's sha256 | 3.17 GB |
+
+About 3.4 GB in total, about 4 GB on disk. It shows progress, can be cancelled, and Retry continues where it stopped.
+Afterwards training runs offline (`HF_HUB_OFFLINE=1`). Everything pinned lives in
+`Resources/training-manifest.json`.
+
+Optional: **Download Tars 0.4** (Settings) fetches the fine-tuned Tars weights from the Hugging Face repo named in the
+manifest (`tars.repo`) so training can start from Tars instead of Von 1.2.
+
+**Advanced** (Settings): use your own checkout, Python and Von instead.
+
 ## Requirements
 
-- macOS 26, Swift 6.2 toolchain (Xcode 26).
-- For training: this repository, a Python 3.12+ environment with the package and Von installed, and a Von checkout
-  with Von 1.2's weights. Set the three paths in Settings.
-
-      git clone https://github.com/wfzyx/von ../von
-      uv venv && uv pip install -e . -e ../von
+- macOS 26 on Apple silicon, Swift 6.2 toolchain (Xcode 26) to build.
 
 ## Build and run
 
@@ -44,6 +61,11 @@ checkpoints).
     build/Tars.app/Contents/MacOS/Tars --self-check       # pure-logic checks, touches nothing
     build/Tars.app/Contents/MacOS/Tars --preview shots/   # PNGs of every screen with demo data, light and dark
     build/Tars.app/Contents/MacOS/Tars --demo             # the app with demo data, nothing saved
+    TARS_HOME=/tmp/t build/Tars.app/Contents/MacOS/Tars --setup                 # the training setup without the window
+    TARS_HOME=/tmp/t build/Tars.app/Contents/MacOS/Tars --quick-train labels.jsonl   # a few steps, then the verdict
+
+`build.sh` copies the training code from the repository into the app and downloads the pinned uv release (checked by
+sha256).
 
 To build with your own bundle id or signing identity, copy `config.example.env` to `config.local.env`.
 

@@ -1,0 +1,57 @@
+{
+  "_comment": "Pinned downloads for the managed training setup. Checked by the app: Von source files by sha256, model files against the Hugging Face repo's own hashes at the pinned revision.",
+  "uv": {
+    "version": "0.13.8",
+    "url": "https://github.com/astral-sh/uv/releases/download/0.13.8/uv-aarch64-apple-darwin.tar.gz",
+    "sha256": "6b71028a6b904f2ae3340ef52e595512de807d06c0a20eaef2f692581b246558"
+  },
+  "python": "3.12.16",
+  "von": {
+    "commit": "fd577a87eea6f0a002d256c5c181135d353a3fd0",
+    "url": "https://codeload.github.com/wfzyx/von/tar.gz/fd577a87eea6f0a002d256c5c181135d353a3fd0",
+    "files": {
+      "src/von/__init__.py": "130a521880e42feb40b8cc5b18f177f58b6d67e9d00cbcbacd5b1a8bb31b9915",
+      "src/von/api.py": "7c5eb61bac8bcc2f7047037aefcbcf398794e747a619f74e649c3179d9cc98b9",
+      "src/von/backends/__init__.py": "1e9589f4f132a1583f1e1c7a7720ba0d55714d6fa7239fb1dcb42c582fd0032e",
+      "src/von/backends/base.py": "c25a2e314b31d156dd572f78624ad760eb7e56e26e8f8c73604a3e4dee7aefe6",
+      "src/von/backends/option_marker_backend.py": "05994b54d092d9429019c964a7c5e6d3372a924d0ff1f52d94b97e2ecda7c77a",
+      "src/von/calibrate.py": "1f1d6fd8897ee03d09cc9fbbe8cc1c05bde6ba18b32e1a8308e892495adc0298",
+      "src/von/chains/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "src/von/chains/ops.py": "8a4a9315bf7133e308e89efdc6af9073b15437ec0c1a9effd2c6886c234016fb",
+      "src/von/chains/runner.py": "659f867f44f03d832be96255af5251b13204683b51581e5959dfabc375d54d6a",
+      "src/von/chains/spans.py": "424f20553e5ec265e69a80967fc30151e91600cbca47e264986276a716805831",
+      "src/von/cli.py": "fdc988121811c8c911c61560a9cb04482bf060796b6241974cd18158fb3c6d6d",
+      "src/von/client.py": "d271eb6c73b49f3610569c3d2f438c254464d5ed9264ca15331ee91491ff86af",
+      "src/von/device.py": "8734598fb9a070320c8bc5f4e96f59c0d573319591da63075bd8f836ace86b25",
+      "src/von/engine.py": "e7f38618d7d88029d6a23e431bdc9c71eaf70f759cc30fb64fc8d995f5d5956c",
+      "src/von/models/__init__.py": "f0bcbbd6cc4d71aa1d4b2fdf1cd4edd32ecec01f307f5d1cf61a52bfd7cda722",
+      "src/von/models/option_marker.py": "db5cfc5f7805de6fa2b2d3005cb66db15808451c3ea6bdc95bea36eda377591d",
+      "src/von/patterns.py": "74ce341e6fa821f3c38e1450a8724a8f6d72f3efb02c3960ec3eccde9fe59db6",
+      "src/von/presets.py": "78e6f0073357112efbea2a227b0c88b46bf99f33d59f93331d2efa2ec1697bd3",
+      "src/von/server.py": "3c5eff76736f9fa0806fdd0557113d60559a2cb6c8631ce2a4930ba376ed3e86",
+      "src/von/types.py": "73ced88215177d5725729939aa116e1873f225f76c3f8e8ca4ec650f5f247acb",
+      "training/train_option_marker.py": "252cee6632900ec7f9f5d9c735f2f576e8bdd9470ab6ff7b1bc6ae8272f12e5a",
+      "training/generate_synthetic_decisions.py": "04512a3579d26f316c08075a99d629c7a2d9a36a7850ca25b58a71feb4abff48"
+    }
+  },
+  "base": {
+    "name": "Von 1.2",
+    "repo": "wfzyx/von",
+    "revision": "3a34cbdfaa1e90f2a9eb6b3bfc5ac5c92a18cb01"
+  },
+  "tars": {
+    "name": "Tars 0.4",
+    "repo": "andrewneuwirth/tars-0.4",
+    "revision": "main"
+  },
+  "modelFiles": [
+    "config.json",
+    "tokenizer.json",
+    "tokenizer_config.json",
+    "marker_calibration.json",
+    "calibration.json",
+    "README.md",
+    "model.safetensors",
+    "option_marker.pt"
+  ]
+}

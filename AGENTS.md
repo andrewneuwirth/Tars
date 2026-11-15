@@ -10,7 +10,8 @@
 
 - Python ≥3.12; torch, transformers ≥5, FastAPI/uvicorn, pydantic. Package `tars/` (setuptools).
 - Needs a Von checkout for the base model and its training utilities: `VON_REPO` (default `../von`). Base checkpoint `TARS_BASE` (default `$VON_REPO/checkpoints/von-1.2`), Tars checkpoint `TARS_CHECKPOINT` (default `checkpoints/tars`), data `TARS_DATA` (default `data/`), live status `TARS_PROGRESS` (default `runs/progress.json`). See `tars/config.py`.
-- `app/`: SwiftUI, SwiftPM (tools 6.2, Swift 5 language mode, macOS 26), MacToolsKit. See `app/README.md`.
+- `app/`: SwiftUI, SwiftPM (tools 6.2, Swift 5 language mode, macOS 26), MacToolsKit. See `app/README.md`. The app bundles `pipeline/`, `tars/` and uv, and sets up its own Python, packages, Von source and Von 1.2 weights from `app/Resources/training-manifest.json` + `requirements.lock` (all pinned). Change a pinned version there, never by hand in code.
+- Tars weights for download: `hf/publish.sh <checkpoint>` uploads to the repo in the manifest's `tars.repo`.
 
 ## Commands
 
@@ -21,6 +22,7 @@ LABELS=labels.jsonl CATALOG=catalogs/mine.json pipeline/run.sh   # build → bas
 CATALOG=catalogs/mine.json pipeline/run.sh                       # same, with Claude CLI generation first
 python pipeline/try.py --catalog catalogs/mine.json "open tunebox and play jazz" base candidate
 cd app && ./build.sh && build/Tars.app/Contents/MacOS/Tars --self-check
+TARS_HOME=/tmp/t app/build/Tars.app/Contents/MacOS/Tars --setup     # managed training env (~3.4 GB download) into a temp folder
 ```
 
 ## Rules

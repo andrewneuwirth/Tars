@@ -77,6 +77,28 @@ enum SelfCheck {
         check(AI.request(.compatible, prompt: "hi", key: nil, model: "m", base: "notaurl") == nil, "bad base URL")
         check(AIProvider.compatible.status(hasKey: false, installed: false, baseURL: "http://localhost:11434/v1") == .ready, "compatible status")
 
+        // Managed environment: the pinned manifest, hashes, paths that never point into the app bundle for writes.
+        let m = Manifest.shared
+        check(m.von.commit.count == 40 && m.base.repo == "wfzyx/von" && m.modelFiles.contains("option_marker.pt") && !m.von.files.isEmpty, "manifest")
+        let blob = dir.appendingPathComponent("blob.txt")
+        try? "hello\n".write(to: blob, atomically: true, encoding: .utf8)
+        check((try? Hash.gitBlobSHA1(blob)) == "ce013625030ba8dba906f756967f9e9ca394464a", "git blob sha1")   // git hash-object
+        check((try? Hash.sha256(blob)) == "5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03", "sha256")
+        let entry = try? JSONDecoder().decode(HF.Entry.self, from: Data(#"{"type":"file","path":"blob.txt","size":6,"oid":"ce013625030ba8dba906f756967f9e9ca394464a"}"#.utf8))
+        check(entry.map { (try? HF.verify(blob, $0)) == true } == true, "HF small-file check")
+        check(entry.map { var e = $0; e.lfs = .init(oid: String(repeating: "0", count: 64), size: 6); return (try? HF.verify(blob, e)) == false } == true, "HF LFS mismatch is caught")
+        let vonDir = dir.appendingPathComponent("von")
+        try? FileManager.default.createDirectory(at: vonDir, withIntermediateDirectories: true)
+        try? FileManager.default.copyItem(at: blob, to: vonDir.appendingPathComponent("a.py"))
+        check((try? Installer.verifyVon(at: vonDir, ["a.py": "5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03"])) != nil
+              && (try? Installer.verifyVon(at: vonDir, ["a.py": "00"])) == nil, "Von file check")
+        check(Bundled.training.map { FileManager.default.fileExists(atPath: $0.appendingPathComponent("pipeline/run.sh").path) } == true, "training code is bundled")
+        check(Bundled.uv != nil, "uv is available")
+        let own = Setup.useOwn
+        Setup.useOwn = false
+        check(Setup.python.hasPrefix(Files.root.path) && Setup.base == Files.baseModel.path && Setup.pythonEnv["HF_HUB_OFFLINE"] == "1", "managed paths")
+        Setup.useOwn = own
+
         print(failures == 0 ? "self-check ok" : "self-check: \(failures) failed")
         exit(failures == 0 ? 0 : 1)
     }

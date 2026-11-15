@@ -13,7 +13,7 @@ does not generate text. It picks one option from a list you supply and gives a p
 | Fine-tuning | Full fine-tune (encoder and scoring head) |
 | Size | 395M parameters, about 2.9 GB on disk with tokenizer and calibration |
 | License | Apache-2.0 |
-| Weights | Not stored in this repository. Train your own with `pipeline/` or the Tars app. |
+| Weights | Not stored in this repository. Published on Hugging Face (repo id in `app/Resources/training-manifest.json`, `tars.repo`) once uploaded with `hf/publish.sh`; or train your own with `pipeline/` or the Tars app. |
 
 ## Intended use
 

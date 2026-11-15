@@ -45,6 +45,9 @@ example commands with their correct steps and skills. Tars 0.4 used about 10,000
 3. Review the labels in a table, spot-check and delete bad ones.
 4. Train, watch loss and accuracy live, compare your model with the base model, and export it.
 
+The app comes with the training code. The first time, it downloads Python, PyTorch, Von's code and the Von 1.2 base
+model (about 3.4 GB, pinned and checksummed), then trains offline. No checkout or Python setup is needed.
+
 Or run the pipeline yourself:
 
 ```bash

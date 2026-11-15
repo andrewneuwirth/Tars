@@ -3,18 +3,29 @@ import Foundation
 /// Where the Python side lives. The app runs the repository's own pipeline (pipeline/run.sh with LABELS=), so training,
 /// evaluation and the promote/keep verdict are exactly what the command line does.
 enum Setup {
-    static var repo: String {
-        get { UserDefaults.standard.string(forKey: "repoPath") ?? guessRepo() ?? "" }
+    /// Advanced: train with your own checkout, Python and Von instead of the environment the app sets up.
+    static var useOwn: Bool {
+        get { UserDefaults.standard.bool(forKey: "useOwnEnvironment") }
+        set { UserDefaults.standard.set(newValue, forKey: "useOwnEnvironment") }
+    }
+    static var ownRepo: String {
+        get { UserDefaults.standard.string(forKey: "repoPath") ?? Bundled.checkout?.path ?? "" }
         set { UserDefaults.standard.set(newValue, forKey: "repoPath") }
     }
-    static var python: String {
-        get { UserDefaults.standard.string(forKey: "pythonPath") ?? (repo.isEmpty ? "" : repo + "/.venv/bin/python") }
+    static var ownPython: String {
+        get { UserDefaults.standard.string(forKey: "pythonPath") ?? (ownRepo.isEmpty ? "" : ownRepo + "/.venv/bin/python") }
         set { UserDefaults.standard.set(newValue, forKey: "pythonPath") }
     }
-    static var von: String {
-        get { UserDefaults.standard.string(forKey: "vonPath") ?? (repo.isEmpty ? "" : (repo as NSString).deletingLastPathComponent + "/von") }
+    static var ownVon: String {
+        get { UserDefaults.standard.string(forKey: "vonPath") ?? (ownRepo.isEmpty ? "" : (ownRepo as NSString).deletingLastPathComponent + "/von") }
         set { UserDefaults.standard.set(newValue, forKey: "vonPath") }
     }
+
+    static var repo: String { useOwn ? ownRepo : Bundled.training?.path ?? "" }
+    static var python: String { useOwn ? ownPython : Files.env.appendingPathComponent("venv/bin/python").path }
+    static var von: String { useOwn ? ownVon : Files.von.path }
+    static var base: String { useOwn ? ownVon + "/checkpoints/von-1.2" : Files.baseModel.path }
+
     static var minutes: Double {
         get { let m = UserDefaults.standard.double(forKey: "trainMinutes"); return m > 0 ? m : 60 }
         set { UserDefaults.standard.set(newValue, forKey: "trainMinutes") }
@@ -23,27 +34,28 @@ enum Setup {
         get { let t = UserDefaults.standard.integer(forKey: "labelTarget"); return t > 0 ? t : 2000 }
         set { UserDefaults.standard.set(newValue, forKey: "labelTarget") }
     }
-    static var base: String { von + "/checkpoints/von-1.2" }
-
-    /// The app built inside a checkout (app/build/Tars.app) finds the checkout by itself.
-    static func guessRepo() -> String? {
-        var u = Bundle.main.bundleURL
-        for _ in 0..<4 {
-            u.deleteLastPathComponent()
-            if FileManager.default.fileExists(atPath: u.appendingPathComponent("pipeline/run.sh").path) { return u.path }
-        }
-        return nil
+    /// Start training from Tars 0.4 instead of Von 1.2 (when it has been downloaded).
+    static var startFromTars: Bool {
+        get { UserDefaults.standard.bool(forKey: "startFromTars") }
+        set { UserDefaults.standard.set(newValue, forKey: "startFromTars") }
     }
 
     /// What's missing before a run can start, in words.
     static func problems() -> [String] {
+        guard useOwn else { return Installer.ready ? [] : ["Set up training first (one time, downloads \(Installer.downloadSize))."] }
         let fm = FileManager.default
         var out: [String] = []
         if !fm.fileExists(atPath: repo + "/pipeline/run.sh") { out.append("Choose the Tars folder (the checkout with pipeline/run.sh).") }
-        if !fm.isExecutableFile(atPath: python) { out.append("Python not found at \(python). Make a venv: uv venv && uv pip install -e . -e ../von") }
-        if !fm.fileExists(atPath: von + "/src") && !fm.fileExists(atPath: von + "/von") { out.append("Von not found at \(von). Clone github.com/wfzyx/von there.") }
+        if !fm.isExecutableFile(atPath: python) { out.append("Python not found at \(python).") }
+        if !fm.fileExists(atPath: von + "/src") { out.append("Von not found at \(von). Clone github.com/wfzyx/von there.") }
         if !fm.fileExists(atPath: base + "/option_marker.pt") { out.append("Von 1.2 weights not found in \(base).") }
         return out
+    }
+
+    /// The environment every Python run gets: where Von and the models are, and no network for Hugging Face.
+    static var pythonEnv: [String: String] {
+        ["VON_REPO": von, "TARS_BASE": base, "PYTHONDONTWRITEBYTECODE": "1", "HF_HUB_OFFLINE": "1", "TRANSFORMERS_OFFLINE": "1",
+         "TARS_CHECKPOINT": Files.checkpoint.path]
     }
 }
 
@@ -169,17 +181,23 @@ final class Trainer {
         p.currentDirectoryURL = URL(fileURLWithPath: Setup.repo)
         var env = ProcessInfo.processInfo.environment
         env["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:" + (env["PATH"] ?? "")
+        env.merge(Setup.pythonEnv) { $1 }
         env.merge([
-            "PYTHON": Setup.python, "VON_REPO": Setup.von, "CATALOG": catalog.path, "LABELS": labels.path,
+            "PYTHON": Setup.python, "CATALOG": catalog.path, "LABELS": labels.path,
             "TARS_DATA": Files.data.path, "TARS_PROGRESS": Files.progress.path, "TARS_RUNS": Files.runs.path,
-            "TARS_CHECKPOINT": Files.checkpoint.path, "RUN_LOG": Files.log.path,
+            "RUN_LOG": Files.log.path,
             "MINUTES": quick ? "3" : String(Int(Setup.minutes)),
         ]) { $1 }
+        var flags: [String] = []
+        if Setup.startFromTars, FileManager.default.fileExists(atPath: Files.tarsModel.appendingPathComponent("option_marker.pt").path) {
+            flags += ["--init", Files.tarsModel.path]   // shortcut: a path with spaces would split here (run.sh splits TRAIN_FLAGS); Application Support has none
+        }
         if quick {
-            env["TRAIN_FLAGS"] = "--max-steps 4 --eval-every 2"
+            flags += ["--max-steps", "4", "--eval-every", "2"]
             env["BUILD_FLAGS"] = "--general 60"
             env["BATCH"] = "4"; env["ACCUM"] = "1"
         }
+        if !flags.isEmpty { env["TRAIN_FLAGS"] = flags.joined(separator: " ") }
         p.environment = env
         p.standardOutput = FileHandle.nullDevice   // run.sh tees everything into RUN_LOG
         p.standardError = FileHandle.nullDevice
@@ -226,7 +244,7 @@ final class Trainer {
         guard !trying, !said.isEmpty else { return }
         trying = true
         tryError = nil
-        let env: [String: String] = ["VON_REPO": Setup.von, "TARS_CHECKPOINT": Files.checkpoint.path]
+        let env = Setup.pythonEnv
         let args = [Setup.repo + "/pipeline/try.py", "--catalog", Files.catalog.path, said, "base", "candidate"]
         let python = Setup.python
         Task {

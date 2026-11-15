@@ -76,7 +76,7 @@ extension RootView {
         case .generate: GenerateView(app: app)
         case .train: TrainView(app: app, trainer: app.trainer)
         case .lab: ModelLabView(app: app, trainer: app.trainer)
-        case .settings: SettingsView()
+        case .settings: SettingsView(app: app)
         }
     }
 }
@@ -416,7 +416,8 @@ struct TrainView: View {
     var body: some View {
         let problems = app.demo ? [] : Setup.problems() + app.catalog.problems
         Page(title: "Train", subtitle: "Fine-tunes the base model on your labels with the repository's pipeline: build, baseline, train, compare.") {
-            Problems(items: problems)
+            if !Setup.useOwn && (!Installer.ready || app.installer.state == .running) && !app.demo { SetupCard(installer: app.installer) }
+            Problems(items: problems.filter { !$0.hasPrefix("Set up training") })
             if app.labels.count < 300 { Problems(items: ["Only \(app.labels.count) labels. A few thousand give a much better model."]) }
             Card(title: "Run") {
                 HStack {

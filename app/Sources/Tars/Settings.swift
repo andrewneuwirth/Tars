@@ -2,20 +2,28 @@ import SwiftUI
 import MacToolsKit
 
 struct SettingsView: View {
-    @State private var repo = Setup.repo
-    @State private var python = Setup.python
-    @State private var von = Setup.von
+    @Bindable var app: AppModel
+    @State private var useOwn = Setup.useOwn
+    @State private var repo = Setup.ownRepo
+    @State private var python = Setup.ownPython
+    @State private var von = Setup.ownVon
     @State private var editing: AIProvider?
     @State private var tick = 0   // re-reads statuses after a key is saved
 
     var body: some View {
-        Page(title: "Settings", subtitle: "Where the Python pipeline lives, and the AI providers that write labels.") {
-            Card(title: "Training setup") {
-                PathRow(title: "Tars folder", detail: "The checkout with pipeline/run.sh", path: $repo, directory: true) { Setup.repo = $0 }
-                PathRow(title: "Python", detail: "A Python 3.12+ with torch, transformers and Von installed", path: $python, directory: false) { Setup.python = $0 }
-                PathRow(title: "Von folder", detail: "github.com/wfzyx/von with checkpoints/von-1.2", path: $von, directory: true) { Setup.von = $0 }
-                Problems(items: Setup.problems())
-                Text("Your data: \(Files.root.path)").font(.caption).foregroundStyle(Color.mtInkMuted).textSelection(.enabled)
+        Page(title: "Settings", subtitle: "Training setup, and the AI providers that write labels.") {
+            SetupCard(installer: app.installer)
+            Card(title: "Start from Tars 0.4") { TarsWeightsRow(app: app) }
+            Card(title: "Advanced") {
+                Toggle("Use my own environment (a Tars checkout, Python and Von I manage myself)", isOn: $useOwn)
+                    .onChange(of: useOwn) { Setup.useOwn = useOwn }
+                if useOwn {
+                    PathRow(title: "Tars folder", detail: "The checkout with pipeline/run.sh", path: $repo, directory: true) { Setup.ownRepo = $0 }
+                    PathRow(title: "Python", detail: "A Python 3.12+ with torch, transformers and Von installed", path: $python, directory: false) { Setup.ownPython = $0 }
+                    PathRow(title: "Von folder", detail: "github.com/wfzyx/von with checkpoints/von-1.2", path: $von, directory: true) { Setup.ownVon = $0 }
+                    Problems(items: Setup.problems())
+                }
+                Text("Your data: \((Files.root.path as NSString).abbreviatingWithTildeInPath)").font(.caption).foregroundStyle(Color.mtInkMuted).textSelection(.enabled)
             }
             Card(title: "AI providers") {
                 ForEach(AIProvider.allCases) { p in
@@ -118,6 +126,53 @@ struct ProviderSetup: View {
     }
 }
 
+/// The one-time training setup, with progress, cancel and retry.
+struct SetupCard: View {
+    @Bindable var installer: Installer
+    var body: some View {
+        Card(title: "Training setup") {
+            if Installer.ready && installer.state != .running {
+                Label("Ready. Training runs on this Mac and works offline.", systemImage: "checkmark.circle.fill").foregroundStyle(Color.mtGood)
+                Text("Python \(Manifest.shared.python), PyTorch and Von 1.2 are in \((Files.root.path as NSString).abbreviatingWithTildeInPath).").font(.caption).foregroundStyle(Color.mtInkMuted)
+            } else {
+                Text("Setting up training downloads \(Installer.downloadSize) once: Python, PyTorch, Von's code and the Von 1.2 base model. After that, training works offline.")
+                    .foregroundStyle(Color.mtInkMuted).fixedSize(horizontal: false, vertical: true)
+                switch installer.state {
+                case .running:
+                    ProgressView(value: installer.fraction) { Text(installer.step) } currentValueLabel: { Text(installer.detail).lineLimit(1) }
+                    Button("Cancel") { installer.cancel() }
+                case .failed(let why):
+                    Label(why, systemImage: "xmark.octagon").foregroundStyle(Color.mtBad).textSelection(.enabled).font(.callout)
+                    Button("Retry") { installer.start() }.buttonStyle(.borderedProminent)
+                default:
+                    Button("Set Up Training") { installer.start() }.buttonStyle(.borderedProminent)
+                }
+            }
+        }
+    }
+}
+
+/// Download Tars 0.4 to fine-tune from it instead of the plain base model.
+struct TarsWeightsRow: View {
+    @Bindable var app: AppModel
+    @State private var startFrom = Setup.startFromTars
+    var body: some View {
+        let have = FileManager.default.fileExists(atPath: Files.tarsModel.appendingPathComponent("option_marker.pt").path)
+        let w = app.tarsWeights
+        Text("Tars 0.4 already knows how to split commands and route them. Starting from it can need fewer labels than starting from Von 1.2. About 3.2 GB, from huggingface.co/\(Manifest.shared.tars.repo).")
+            .font(.caption).foregroundStyle(Color.mtInkMuted).fixedSize(horizontal: false, vertical: true)
+        if have {
+            Toggle("Start training from Tars 0.4", isOn: $startFrom).onChange(of: startFrom) { Setup.startFromTars = startFrom }
+        } else if w.state == .running {
+            ProgressView(value: w.fraction) { Text(w.step) } currentValueLabel: { Text(w.detail) }
+            Button("Cancel") { w.cancel() }
+        } else {
+            if case .failed(let why) = w.state { Text(why).font(.callout).foregroundStyle(Color.mtBad) }
+            Button("Download Tars 0.4") { w.startTars() }.disabled(app.demo)
+        }
+    }
+}
+
 // MARK: Onboarding
 
 struct OnboardingView: View {
@@ -139,7 +194,7 @@ struct OnboardingView: View {
         Info(symbol: "sparkles", title: "2. Make labels",
              text: "Labels are example commands with the right answer. Your own AI provider writes them (a Claude, ChatGPT or Gemini subscription, an API key, or a local model), or any agent connected over MCP. You review them before training."),
         Info(symbol: "chart.xyaxis.line", title: "3. Train and compare",
-             text: "Tars fine-tunes the base model on your labels with your Mac's GPU, then scores it against the base model on sentences it never saw. Export it when it's better."),
+             text: "Tars fine-tunes the base model on your labels with your Mac's GPU, then scores it against the base model on sentences it never saw. Everything it needs comes with the app; the first time, it downloads Python, PyTorch and the base model once."),
     ]
 
     var body: some View {
@@ -150,6 +205,14 @@ struct OnboardingView: View {
             Text(p.text).multilineTextAlignment(.center).foregroundStyle(Color.mtInkMuted).frame(maxWidth: 440).fixedSize(horizontal: false, vertical: true)
             if page == 1 {
                 Button("Start from the Example Catalog") { app.loadExample(); page += 1 }.disabled(!app.catalog.skills.isEmpty)
+            }
+            if page == pages.count - 1 && !Installer.ready {
+                if app.installer.state == .running {
+                    ProgressView(value: app.installer.fraction) { Text(app.installer.step).font(.caption) }.frame(maxWidth: 380)
+                } else {
+                    Button("Set Up Training Now (downloads \(Installer.downloadSize))") { app.installer.start() }
+                    Text("You can also do this later from the Train page.").font(.caption).foregroundStyle(Color.mtInkMuted)
+                }
             }
             Spacer(minLength: 0)
             HStack {

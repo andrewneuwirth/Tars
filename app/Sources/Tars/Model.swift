@@ -97,10 +97,12 @@ extension Labeled {
     }
 }
 
-/// Files under ~/Library/Application Support/Tars: catalog.json, labels.jsonl, and the training data and runs.
+/// Files under ~/Library/Application Support/Tars (or $TARS_HOME, for tests): catalog.json, labels.jsonl, the training
+/// environment, the models, and the training data and runs.
 enum Files {
     static var root: URL {
-        let u = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Tars")
+        let u = ProcessInfo.processInfo.environment["TARS_HOME"].map { URL(fileURLWithPath: $0) }
+            ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Tars")
         try? FileManager.default.createDirectory(at: u, withIntermediateDirectories: true)
         return u
     }
@@ -113,6 +115,10 @@ enum Files {
     static var checkpoint: URL { root.appendingPathComponent("checkpoints/tars") }
     static var candidate: URL { root.appendingPathComponent("checkpoints/tars-candidate") }
     static var log: URL { root.appendingPathComponent("run.log") }
+    static var env: URL { root.appendingPathComponent("env") }
+    static var von: URL { root.appendingPathComponent("von") }
+    static var baseModel: URL { root.appendingPathComponent("models/von-1.2") }
+    static var tarsModel: URL { root.appendingPathComponent("models/tars-0.4") }
 
     static func loadCatalog(_ url: URL = catalog) -> Catalog? {
         (try? Data(contentsOf: url)).flatMap { try? JSONDecoder().decode(Catalog.self, from: $0) }
