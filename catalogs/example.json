@@ -1,0 +1,307 @@
+{
+  "assistant": "Tars",
+  "context": "You are writing training data for Tars, a voice assistant on a desktop computer. This is an example setup with made-up apps: Tunebox (music), Inkpad (notes), a web browser, a mail and messages app, a calendar and a file browser. Two screens: the laptop on the left, an external monitor on the right. Sentences are speech-to-text output after the wake word: often no punctuation, sometimes misheard words.",
+  "families": {
+    "time": "Timers, alarms and reminders: set one, check how long is left, cancel it",
+    "calendar": "Calendar: what's on today or next, am I free, add or move an event",
+    "messages": "Messages: send a message to someone, read new messages, call someone",
+    "notes": "Notes: take a note, read my notes, find a note",
+    "music": "Music playback in the Tunebox app: play a song, album, artist or playlist, pause, skip, what's playing",
+    "windows": "Apps and windows: open, quit or switch apps, move a window to a screen, minimize, full screen",
+    "web": "Browser and web: open a website, search the web, tabs, back and forward",
+    "system": "Computer controls: volume, brightness, dark mode, wifi, do not disturb, battery, lock the screen",
+    "files": "Files and folders: find a file, open a folder, latest download, take a screenshot",
+    "math": "Math and conversions: calculate, convert units, percentages and tips",
+    "none": "Not a request for the computer: talking to someone else, thinking out loud, reading aloud, never mind"
+  },
+  "skills": [
+    {
+      "key": "timers",
+      "family": "time",
+      "name": "Timers",
+      "examples": [
+        "set a timer for 10 minutes",
+        "how long's left on my timer",
+        "cancel the timer"
+      ]
+    },
+    {
+      "key": "alarms",
+      "family": "time",
+      "name": "Alarms",
+      "examples": [
+        "set an alarm for 7:30",
+        "wake me up in 20 minutes"
+      ]
+    },
+    {
+      "key": "reminders",
+      "family": "time",
+      "name": "Reminders",
+      "examples": [
+        "remind me in an hour to call the bank",
+        "remind me tomorrow to water the plants"
+      ]
+    },
+    {
+      "key": "whats_next",
+      "family": "calendar",
+      "name": "What's next",
+      "examples": [
+        "what's next",
+        "what's my next meeting"
+      ]
+    },
+    {
+      "key": "am_i_free",
+      "family": "calendar",
+      "name": "Am I free",
+      "examples": [
+        "am I free at 4",
+        "do I have anything tomorrow at 2"
+      ]
+    },
+    {
+      "key": "add_event",
+      "family": "calendar",
+      "name": "Add an event",
+      "examples": [
+        "add lunch with Sam tomorrow at noon",
+        "schedule a dentist visit friday at 9"
+      ]
+    },
+    {
+      "key": "send_message",
+      "family": "messages",
+      "name": "Send a message",
+      "examples": [
+        "text Sam I'm on my way",
+        "message Mom saying running late"
+      ]
+    },
+    {
+      "key": "read_messages",
+      "family": "messages",
+      "name": "Read messages",
+      "examples": [
+        "any new messages",
+        "read my last message from Sam"
+      ]
+    },
+    {
+      "key": "call_someone",
+      "family": "messages",
+      "name": "Call someone",
+      "examples": [
+        "call Mom",
+        "start a video call with Alex"
+      ]
+    },
+    {
+      "key": "take_note",
+      "family": "notes",
+      "name": "Take a note",
+      "examples": [
+        "note that the meeting moved to Thursday",
+        "take a note: buy batteries"
+      ]
+    },
+    {
+      "key": "read_notes",
+      "family": "notes",
+      "name": "Read notes",
+      "examples": [
+        "read my notes from today",
+        "find my note about the trip"
+      ]
+    },
+    {
+      "key": "play_music",
+      "family": "music",
+      "name": "Play music by name",
+      "examples": [
+        "play some jazz",
+        "put on my running playlist",
+        "play Abbey Road in Tunebox"
+      ]
+    },
+    {
+      "key": "play_pause_skip",
+      "family": "music",
+      "name": "Play, pause, skip",
+      "examples": [
+        "pause",
+        "next song",
+        "previous track"
+      ]
+    },
+    {
+      "key": "whats_playing",
+      "family": "music",
+      "name": "What's playing",
+      "examples": [
+        "what song is this",
+        "who sings this"
+      ]
+    },
+    {
+      "key": "open_app",
+      "family": "windows",
+      "name": "Open or switch to an app",
+      "examples": [
+        "open Tunebox",
+        "switch to the browser",
+        "bring up Inkpad"
+      ]
+    },
+    {
+      "key": "quit_app",
+      "family": "windows",
+      "name": "Quit an app",
+      "examples": [
+        "quit Inkpad",
+        "close the Tunebox app"
+      ]
+    },
+    {
+      "key": "move_window",
+      "family": "windows",
+      "name": "Move, minimize, maximize windows",
+      "examples": [
+        "move this window to the right monitor",
+        "minimize everything",
+        "full screen the browser"
+      ]
+    },
+    {
+      "key": "open_website",
+      "family": "web",
+      "name": "Open a website or search",
+      "examples": [
+        "open the weather site",
+        "search for pasta recipes",
+        "look up the Eiffel Tower"
+      ]
+    },
+    {
+      "key": "tabs",
+      "family": "web",
+      "name": "Tabs",
+      "examples": [
+        "next tab",
+        "close this tab",
+        "reopen the last tab"
+      ]
+    },
+    {
+      "key": "back_forward",
+      "family": "web",
+      "name": "Back, forward, reload",
+      "examples": [
+        "go back",
+        "reload the page"
+      ]
+    },
+    {
+      "key": "volume",
+      "family": "system",
+      "name": "Volume",
+      "examples": [
+        "volume 40",
+        "turn it up",
+        "mute"
+      ]
+    },
+    {
+      "key": "brightness",
+      "family": "system",
+      "name": "Brightness",
+      "examples": [
+        "brightness 70",
+        "dim the screen"
+      ]
+    },
+    {
+      "key": "do_not_disturb",
+      "family": "system",
+      "name": "Do Not Disturb",
+      "examples": [
+        "turn on do not disturb",
+        "focus mode off"
+      ]
+    },
+    {
+      "key": "dark_mode_lock",
+      "family": "system",
+      "name": "Dark mode and lock",
+      "examples": [
+        "turn on dark mode",
+        "lock the screen"
+      ]
+    },
+    {
+      "key": "battery_wifi",
+      "family": "system",
+      "name": "Battery and Wi-Fi",
+      "examples": [
+        "what's my battery",
+        "is wifi on",
+        "turn wifi off"
+      ]
+    },
+    {
+      "key": "find_file",
+      "family": "files",
+      "name": "Find a file",
+      "examples": [
+        "find the PDF about taxes",
+        "where's my resume"
+      ]
+    },
+    {
+      "key": "open_folder",
+      "family": "files",
+      "name": "Open a folder",
+      "examples": [
+        "open my Downloads",
+        "show the Projects folder"
+      ]
+    },
+    {
+      "key": "screenshot",
+      "family": "files",
+      "name": "Screenshot",
+      "examples": [
+        "take a screenshot",
+        "screenshot this window"
+      ]
+    },
+    {
+      "key": "calculate",
+      "family": "math",
+      "name": "Calculate",
+      "examples": [
+        "what's 17% of 240",
+        "12 times 34"
+      ]
+    },
+    {
+      "key": "convert_units",
+      "family": "math",
+      "name": "Convert units",
+      "examples": [
+        "convert 5 miles to kilometers",
+        "72 fahrenheit in celsius"
+      ]
+    },
+    {
+      "key": "tip_split",
+      "family": "math",
+      "name": "Tips and splits",
+      "examples": [
+        "20 percent tip on 45",
+        "split 84 dollars 3 ways"
+      ]
+    }
+  ]
+}

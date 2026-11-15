@@ -1,6 +1,6 @@
 """HTTP service: POST /plan {"said": "..."} → steps with family and skill.
 
-    python -m tars.server --catalog catalogs/example_catalog.json --port 8766
+    python -m tars.server --catalog catalogs/example.json --port 8766
 """
 
 from __future__ import annotations

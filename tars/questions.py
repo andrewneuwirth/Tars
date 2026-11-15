@@ -63,7 +63,13 @@ def skill_row(cat: Catalog, step: str, family: str, label: str | None = None, pr
             "options": [{"id": k, "description": cat.describe(k)} for k in fam]}
 
 
+# "next" also starts real commands ("next song"); it is a joiner only before other words.
+NEXT_NOUNS = {"song", "track", "tab", "page", "video", "episode"}
+
+
 def strip_joiners(words: list[str]) -> str:
     while len(words) > 1 and clean_word(words[0]) in JOINERS:
+        if clean_word(words[0]) == "next" and clean_word(words[1]) in NEXT_NOUNS:
+            break
         words = words[1:]
     return " ".join(words).strip(" ,")

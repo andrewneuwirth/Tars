@@ -1,3 +1,7 @@
+# Copyright 2026 The Tars Authors. Licensed under the Apache License, Version 2.0.
+# Portions adapted from Von (https://github.com/wfzyx/von), Copyright 2026 Victor Hugo,
+# Apache License 2.0: model loading and row packing follow Von's OptionMarkerModel usage and its training collator, which are imported.
+# Modified by The Tars Authors: length-sorted batching and a predict() helper that returns the chosen option and its probability.
 """Load a Von/Tars checkpoint and score rows in batches, with the same packing
 and attention mode Von's live service uses."""
 

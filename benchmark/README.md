@@ -1,23 +1,19 @@
-# Tars hard multi-step benchmark
+# Benchmark script
 
-480 spoken commands that each ask for 2–4 things in one breath, across different
-parts of an assistant, labeled with their steps and skills (catalog:
-`catalogs/example_catalog.json`).
+`evaluate_benchmark.py` scores any planner end to end on a file of multi-step commands. A sentence counts only if
+the number of steps, every step's words, family and skill all match.
 
-They were written to be hard to split: missing joiners ("open claude move it to the
-left"), "and go" / "to" used as "and", later steps referring back ("move it", "that
-song"), titles and queries containing command words ("play Stop Making Sense",
-"search how to close a tab"), questions mixed with actions, and three speaking styles
-(formal, gamer, non-technical) that were **kept out of training entirely**.
+The file has one sentence per line, labeled with your catalog's skill keys:
 
-Provenance and caveats, stated plainly:
-- Written by Claude (Anthropic) in separate requests from the training data, then
-  anonymized (course codes and project names replaced).
-- 75 of the 480 have a near-copy (≥80% word overlap) in Tars's training data. Both
-  numbers are reported in the main README; the clean subset is the honest one.
-- Labels are model-written and not all hand-checked; a few are debatable.
+```json
+{"said": "set a timer for 10 minutes and play some jazz", "steps": [{"text": "set a timer for 10 minutes", "skill": "timers"}, {"text": "play some jazz", "skill": "play_music"}]}
+```
 
-Score any planner end to end (a sentence counts only if the step count, every step's
-words, family and skill all match):
+    python benchmark/evaluate_benchmark.py --catalog catalogs/mine.json --file my_benchmark.jsonl
+    python benchmark/evaluate_benchmark.py --catalog catalogs/mine.json --file my_benchmark.jsonl --url http://127.0.0.1:8766/plan
 
-    python benchmark/evaluate_benchmark.py --catalog catalogs/example_catalog.json --url http://host/plan
+Any planner works if it returns `{"steps": [{"text", "family", "skill"}]}` for `{"said": ...}`.
+
+The 480-sentence benchmark behind the numbers in the main README is not released: it was written for one person's
+catalog and names their own apps. Write yours the same way: separate requests from your training labels, held-out
+speaking styles, and a check for near-copies of training sentences.

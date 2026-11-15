@@ -3,7 +3,7 @@ gold steps. A sentence counts only if the number of steps, every step's family
 and every step's skill all match (step text is compared loosely: same words
 after dropping joiners and punctuation).
 
-    python benchmark/evaluate_benchmark.py --catalog catalogs/example_catalog.json
+    python benchmark/evaluate_benchmark.py --catalog catalogs/mine.json --file my_benchmark.jsonl
     python benchmark/evaluate_benchmark.py --catalog ... --url http://127.0.0.1:8766/plan   # any HTTP planner
 
 Any planner works if it returns {"steps": [{"text", "family", "skill"}]} for {"said": ...}.
@@ -36,7 +36,7 @@ def words(s: str) -> list[str]:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--catalog", required=True)
-    ap.add_argument("--file", default=os.path.join(ROOT, "benchmark", "hard_multistep.jsonl"))
+    ap.add_argument("--file", required=True, help="jsonl of labeled sentences (see benchmark/README.md)")
     ap.add_argument("--url", help="POST endpoint of any planner; default: load Tars in-process")
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--out", help="write per-sentence results here (jsonl)")

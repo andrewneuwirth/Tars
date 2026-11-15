@@ -1,3 +1,7 @@
+# Copyright 2026 The Tars Authors. Licensed under the Apache License, Version 2.0.
+# Portions adapted from Von (https://github.com/wfzyx/von), Copyright 2026 Victor Hugo,
+# Apache License 2.0: the optimizer setup (encoder lr x0.5, head lr x2.5, AdamW, weight decay 0.01), gradient clipping and the forward/loss step follow training/train_option_marker.py, whose collator and loss are imported.
+# Modified by The Tars Authors: a time-budgeted loop with a clock-based cosine schedule, MPS bf16 autocast, checkpoint selection on validation plus general replay, early stopping and live status for a dashboard.
 """Full fine-tune of Tars (every weight: Von's ModernBERT encoder + scoring head)
 on the local GPU (MPS or CUDA), continuing from Von 1.2 or an earlier Tars.
 

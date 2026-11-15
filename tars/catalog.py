@@ -1,5 +1,5 @@
 """A skill catalog: the assistant's families (first question) and skills
-(second question). See catalogs/example_catalog.json for the format."""
+(second question). See catalogs/example.json for the format."""
 
 from __future__ import annotations
 

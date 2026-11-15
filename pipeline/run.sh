@@ -1,26 +1,29 @@
 #!/bin/zsh
 # One training round, start to verdict. Nothing replaces your checkpoint until
 # you copy the candidate over it (see README, "Promote").
-#   CATALOG=catalogs/example_catalog.json pipeline/run.sh
+#   CATALOG=catalogs/example.json pipeline/run.sh
 #   REAL=my_sentences.txt MINUTES=100 pipeline/run.sh
+#   LABELS=labels.jsonl CATALOG=mine.json pipeline/run.sh   # labels you already have (Tars app, MCP): no generation step
 set -uo pipefail
 cd "$(dirname "$0")/.."
 export PYTHONUNBUFFERED=1
 # Apple GPUs: cap MPS memory so a long run can't swamp the machine.
 export PYTORCH_MPS_HIGH_WATERMARK_RATIO=${MPS_HIGH:-0.6} PYTORCH_MPS_LOW_WATERMARK_RATIO=${MPS_LOW:-0.5}
 PY=${PYTHON:-python}
-CATALOG=${CATALOG:-catalogs/example_catalog.json}
+CATALOG=${CATALOG:-catalogs/example.json}
 st() { "$PY" pipeline/status.py stage "$@"; }
 mkdir -p runs
-LOG=runs/run_$(date +%Y%m%d-%H%M%S).log
+LOG=${RUN_LOG:-runs/run_$(date +%Y%m%d-%H%M%S).log}
 fail() { st failed "$1"; echo "FAILED: $1"; exit 1; }
 trap 'st stopped "Stopped"; exit 130' INT TERM
 {
   st starting
-  st generating "Claude writes hard, multi-step commands (no tools)"
-  $PY pipeline/generate.py --catalog "$CATALOG" --workers ${WORKERS:-6} ${REAL:+--real "$REAL"} || fail "generation"
+  if [ -z "${LABELS:-}" ]; then
+    st generating "Claude writes hard, multi-step commands (no tools)"
+    $PY pipeline/generate.py --catalog "$CATALOG" --workers ${WORKERS:-6} ${REAL:+--real "$REAL"} || fail "generation"
+  fi
   st building "Split, route and skill questions"
-  $PY pipeline/build.py --catalog "$CATALOG" ${REPLAY:+--replay "$REPLAY"} || fail "dataset build"
+  $PY pipeline/build.py --catalog "$CATALOG" ${LABELS:+--labels "$LABELS"} ${REPLAY:+--replay "$REPLAY"} ${BUILD_FLAGS:-} || fail "dataset build"
   st evaluating "Baseline on the test sets"
   $PY pipeline/evaluate.py baseline || fail "baseline"
   st training "Full fine-tune"

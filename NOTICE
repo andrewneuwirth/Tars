@@ -1,20 +1,40 @@
 Tars
 Copyright 2026 The Tars Authors
+https://github.com/andrewneuwirth/Tars
 
-This product is a fine-tune of, and builds on, Von:
-  Von — the open-source System One decision model
-  Copyright 2026 Victor Hugo (https://github.com/wfzyx/von)
+This product is based on Von:
+  Von, the open-source System One decision model
+  Copyright 2026 Victor Hugo Panisa (Victor Hugo)
+  https://github.com/wfzyx/von
   Licensed under the Apache License, Version 2.0
 
 Von's model uses the ModernBERT encoder:
   ModernBERT, Answer.AI and LightOn (https://github.com/AnswerDotAI/ModernBERT)
   Licensed under the Apache License, Version 2.0
 
-Tars reuses Von's model class (von.models.option_marker), its training
-collator and loss (training/train_option_marker.py) and its synthetic
-general-reasoning generator (training/generate_synthetic_decisions.py),
-imported from a Von checkout rather than copied.
+What Tars uses from Von
+  - Von's model class (von.models.option_marker.OptionMarkerModel), its training
+    collator and loss (training/train_option_marker.py) and its synthetic
+    general-reasoning generator (training/generate_synthetic_decisions.py).
+    These are imported from a Von checkout at run time, not copied.
+  - Von 1.2's weights are the starting point of every Tars fine-tune.
+  - pipeline/train.py and tars/model.py adapt parts of Von's training loop and
+    model loading; each file's header says which parts.
 
-Training phrasings for the example catalog were written by Anthropic's
-Claude (via the Claude Code CLI). Check Anthropic's terms before
-redistributing generated datasets.
+What Tars changed or added
+  - Three decision questions for commands, built from a skill catalog:
+    split (does a new step start here?), route (which family?) and skill
+    (which skill in that family?) (tars/questions.py).
+  - A planner that chains the three questions into steps (tars/planner.py)
+    and an HTTP server (tars/server.py).
+  - A full fine-tuning pipeline: label generation, dataset build with speech
+    recognition noise and general-reasoning replay, time-budgeted training on
+    Apple GPUs or CUDA, and a promote/keep evaluation (pipeline/).
+  - A macOS app for defining a catalog, collecting labels from your own AI
+    provider or any MCP client, reviewing them, training and comparing models (app/).
+
+Training labels
+  Tars's own training phrasings were written by an LLM (Anthropic's Claude,
+  through the Claude Code CLI). Labels you make with the app come from
+  whatever provider you choose. Check your provider's terms before
+  redistributing generated datasets.

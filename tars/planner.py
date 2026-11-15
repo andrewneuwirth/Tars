@@ -1,7 +1,7 @@
 """Sentence → steps, each with a family and a skill.
 
     from tars import Catalog, Planner
-    planner = Planner(Catalog.load("catalogs/example_catalog.json"))
+    planner = Planner(Catalog.load("catalogs/example.json"))
     planner.plan("set a 20 minute timer play Stop Making Sense and throw it on my right monitor")
 """
 

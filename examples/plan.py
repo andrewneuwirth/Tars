@@ -9,11 +9,11 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from tars import Catalog, Planner  # noqa: E402
 
-planner = Planner(Catalog.load(os.path.join(os.path.dirname(__file__), "..", "catalogs", "example_catalog.json")))
+planner = Planner(Catalog.load(os.path.join(os.path.dirname(__file__), "..", "catalogs", "example.json")))
 for said in [
-    "open apple music and go play oppenheimer move it to my right monitor",
-    "lock in timer 25 minutes put on my study playlist dnd on",
-    "whats due tomorrow and open the browser to put it on the left screen",
+    "open tunebox and go play abbey road move it to my right monitor",
+    "timer 25 minutes put on my running playlist dnd on",
+    "am i free at 4 and text sam that i'll be late",
     "play Stop Making Sense",
 ]:
     plan = planner.plan(said)

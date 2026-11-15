@@ -10,7 +10,11 @@ Replay keeps the base model's general reasoning (Von's synthetic decisions) and,
 optionally, rows from an earlier task (--replay file.jsonl) so fine-tuning on
 routing doesn't erase what the model already did well.
 
-    python pipeline/build.py --catalog catalogs/example_catalog.json
+    python pipeline/build.py --catalog catalogs/example.json
+    python pipeline/build.py --catalog mine.json --labels labels.jsonl   # labels from the Tars app or any agent
+
+A --labels file has one sentence per line: {"said": "...", "steps": [{"text": "...", "skill": "<key or none>"}],
+"set": "train" | "test" | "real"} (set defaults to train). Step texts are exact substrings of "said".
 """
 
 from __future__ import annotations
@@ -153,11 +157,21 @@ def main() -> None:
     ap.add_argument("--replay", action="append", default=[], help="jsonl of earlier-task rows to keep (repeatable)")
     ap.add_argument("--replay-rows", type=int, default=7000)
     ap.add_argument("--seed", type=int, default=4)
+    ap.add_argument("--labels", help="jsonl of labeled sentences (see the docstring); used with or alongside data/raw")
     args = ap.parse_args()
     rng = random.Random(args.seed)
     cat = Catalog.load(args.catalog)
     b = Builder(cat, rng)
-    read = lambda k: read_jsonl(os.path.join(RAW, f"{k}.jsonl"))  # noqa: E731
+    labels = read_jsonl(args.labels) if args.labels else []
+
+    def read(kind: str) -> list[dict]:
+        rows = read_jsonl(os.path.join(RAW, f"{kind}.jsonl"))
+        for it in labels:  # test -> test_hard, real -> test_real, train -> single-step "confuse" (gets ASR noise) or multi
+            s = it.get("set", "train")
+            k = {"test": "multi_h", "real": "real"}.get(s, "multi" if len(it.get("steps", [])) > 1 else "confuse")
+            if k == kind:
+                rows.append(it)
+        return rows
 
     def with_skill(items):
         for it in items:

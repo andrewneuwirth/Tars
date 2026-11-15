@@ -12,7 +12,7 @@ Kinds of requests:
 
 Output: data/raw/<kind>.jsonl. Resumable: finished requests are skipped.
 
-    python pipeline/generate.py --catalog catalogs/example_catalog.json --workers 6
+    python pipeline/generate.py --catalog catalogs/example.json --workers 6
 """
 
 from __future__ import annotations
@@ -104,7 +104,7 @@ Make them HARD and realistic, not textbook:
 - include indirect goals ("it's way too loud" instead of "volume down"), vague references (this, that, it),
   filler, self-corrections ("open, no wait, close"), and a few with speech-to-text mistakes
 - about a fifth should contain a word that belongs to a DIFFERENT skill but still mean this one
-  (e.g. "move my 3pm meeting" is calendar, not windows; "what's left on claude" is AI usage)
+  (e.g. "move my 3pm meeting" is calendar, not windows; "play the next tab" is not music)
 Only one action per sentence.
 Return ONLY a JSON array of objects: {{"said": "...", "style": "<one of the styles above, copied exactly>"}}"""
 
@@ -119,14 +119,14 @@ and also freely from the rest of Tars:
 {skill_list()}
 
 Make the sentences hard to split into steps, the way people really talk:
-- joiners vary: "and", "and then", "then", commas, NOTHING at all ("open claude move it to the left"),
+- joiners vary: "and", "and then", "then", commas, NOTHING at all ("open the browser move it to the left"),
   "and go", "go ahead and", "to" used as "and" ("open music to play oppenheimer")
 - later steps refer back: it, that, this window, them, the song
 - names and queries that contain command words must stay inside their step:
   "play Stop Making Sense", "search how to close a tab", "text mom I'll open the door",
   "play Move Along then put it on the right screen"
 - mix families: a timer + music + window move; a question + an action; a text + a search
-- some steps are questions ("what's due tomorrow and open the browser")
+- some steps are questions ("am I free at 4 and open the calendar")
 - speaking styles to spread across: {' | '.join(styles)}
 For each sentence give the exact step texts as substrings of "said" (in order, without the joiner words),
 and each step's skill key from the list above (or "none" if a part is just chatter).
@@ -142,7 +142,7 @@ Pairs to cover (roughly equal numbers, both directions):
 {lines}
 Also include about a sixth that are NOT commands at all (skill "none"): the user talking to a friend
 or on the phone, reading something aloud, thinking out loud, saying "never mind", mentioning apps
-without asking for anything ("claude was so slow today", "i left my laptop on the right").
+without asking for anything ("the browser was so slow today", "i left my laptop on the right").
 All skills, for reference:
 {skill_list()}
 Return ONLY a JSON array: {{"said": "...", "skill": "<key or none>", "style": "confusable"}}"""

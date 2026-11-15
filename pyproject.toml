@@ -1,7 +1,7 @@
 [project]
 name = "tars-planner"
 version = "0.4.0"
-description = "A small, local planner for voice assistants: split a spoken sentence into steps, route each step, pick the skill. Fine-tuned from Von."
+description = "A small local model that decides what to do with a command: split it into steps, route each step, pick the skill. Fine-tuned from Von."
 readme = "README.md"
 license = { text = "Apache-2.0" }
 authors = [{ name = "The Tars Authors" }]
@@ -15,6 +15,7 @@ dependencies = [
 ]
 
 [project.urls]
+"Source" = "https://github.com/andrewneuwirth/Tars"
 "Base model (Von)" = "https://github.com/wfzyx/von"
 
 [tool.setuptools]
