@@ -85,7 +85,7 @@ final class Installer {
         }
     }
 
-    /// Downloads Tars 0.4's weights (Manifest.tars) into models/tars-0.4.
+    /// Downloads the published Tars weights (Manifest.tars) into models/tars.
     func startTars() {
         guard state != .running else { return }
         state = .running

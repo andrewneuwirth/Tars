@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Uploads a Tars checkpoint to Hugging Face so the Tars app can download it ("Start from Tars 0.4").
+# Uploads a Tars checkpoint to Hugging Face so the Tars app can download it ("Start from Tars").
 #   hf/publish.sh <checkpoint-folder>          (needs `hf auth login` with write access to the repo)
 # The repo id is the one the app reads: app/Resources/training-manifest.json → tars.repo.
 set -euo pipefail
@@ -19,4 +19,7 @@ cp hf/README.md "$STAGE/README.md"
 cp NOTICE LICENSE "$STAGE/"
 echo "Uploading $(du -sh "$STAGE" | cut -f1) to https://huggingface.co/$REPO"
 hf repo create "$REPO" --repo-type model --exist-ok
-hf upload "$REPO" "$STAGE" . --commit-message "Tars 0.4"
+NAME=$(plutil -extract tars.name raw app/Resources/training-manifest.json)
+hf upload "$REPO" "$STAGE" . --commit-message "$NAME"
+SHA=$(curl -fsS "https://huggingface.co/api/models/$REPO/revision/main" | python3 -c 'import json,sys; print(json.load(sys.stdin)["sha"])')
+echo "Uploaded $REPO at $SHA. To pin the app to exactly these files, set tars.revision to $SHA in app/Resources/training-manifest.json."

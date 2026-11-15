@@ -14,7 +14,7 @@ struct SettingsView: View {
         Page(title: "Settings", subtitle: "Training setup, and the AI providers that write labels.") {
             SectionHeader(title: "Training")
             SetupCard(installer: app.installer)
-            Card(title: "Start from Tars 0.4") { TarsWeightsRow(app: app) }
+            Card(title: "Start from \(Manifest.shared.tars.name)") { TarsWeightsRow(app: app) }
             SectionHeader(title: "AI providers").padding(.top, 6)
             Card(padding: 0) {
                 VStack(spacing: 0) {
@@ -190,18 +190,18 @@ struct InstallProgress: View {
     }
 }
 
-/// Download Tars 0.4 to fine-tune from it instead of the plain base model.
+/// Download the published Tars model to fine-tune from it instead of the plain base model.
 struct TarsWeightsRow: View {
     @Bindable var app: AppModel
     @State private var startFrom = Setup.startFromTars
     var body: some View {
         let have = FileManager.default.fileExists(atPath: Files.tarsModel.appendingPathComponent("option_marker.pt").path)
         let w = app.tarsWeights
-        Text("Tars 0.4 already knows how to split commands and route them. Starting from it can need fewer labels than starting from Von 1.2. About 3.2 GB, from huggingface.co/\(Manifest.shared.tars.repo).")
+        Text("\(Manifest.shared.tars.name) already knows how to split commands and route them. Starting from it can need fewer labels than starting from Von 1.2. About 3.2 GB, from huggingface.co/\(Manifest.shared.tars.repo).")
             .font(.ui(12.5)).foregroundStyle(Look.muted).fixedSize(horizontal: false, vertical: true)
         if have {
-            SettingRow(title: "Start training from Tars 0.4", last: true) {
-                DSwitch(label: "Start training from Tars 0.4", on: $startFrom)
+            SettingRow(title: "Start training from \(Manifest.shared.tars.name)", last: true) {
+                DSwitch(label: "Start training from \(Manifest.shared.tars.name)", on: $startFrom)
                     .onChange(of: startFrom) { Setup.startFromTars = startFrom }
             }
         } else if w.state == .running {
@@ -209,7 +209,7 @@ struct TarsWeightsRow: View {
             Button("Cancel") { w.cancel() }.buttonStyle(DButton(small: true))
         } else {
             if case .failed(let why) = w.state { Notice(text: why, symbol: "xmark.octagon.fill", tint: .mtBad) }
-            Button { w.startTars() } label: { Label("Download Tars 0.4", systemImage: "arrow.down.circle") }.buttonStyle(DButton()).disabled(app.demo)
+            Button { w.startTars() } label: { Label("Download \(Manifest.shared.tars.name)", systemImage: "arrow.down.circle") }.buttonStyle(DButton()).disabled(app.demo)
         }
     }
 }

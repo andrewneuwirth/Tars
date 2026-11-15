@@ -1,6 +1,6 @@
 # AGENTS.md: Tars
 
-**Tars** (`tars-planner` 0.4.0, Apache-2.0) is a small local model that decides what to do with a command: it splits one spoken sentence into steps, routes each step to a family, and picks the skill. It is a full fine-tune of Von 1.2 (395M ModernBERT option-marker model, https://github.com/wfzyx/von). `app/` is the Tars Mac app for building a catalog, collecting labels, training and comparing models.
+**Tars** (`tars-planner` 0.4.0, model Tars 0.5, Apache-2.0) is a small local model that decides what to do with a command: it splits one spoken sentence into steps, routes each step to a family, and picks the skill. It is a full fine-tune of Von 1.2 (395M ModernBERT option-marker model, https://github.com/wfzyx/von). `app/` is the Tars Mac app for building a catalog, collecting labels, training and comparing models.
 
 ## Naming
 
@@ -27,7 +27,7 @@ TARS_HOME=/tmp/t app/build/Tars.app/Contents/MacOS/Tars --setup     # managed tr
 
 ## Rules
 
-- Checkpoints (~2.9 GB), `data/` and `runs/` are gitignored. Never commit weights or generated data.
+- Checkpoints (~2.9 GB), `data/` and `runs/` are gitignored. Never commit weights or generated data, except the public example-catalog labels (`labels/example.jsonl`) and benchmark (`benchmark/public/`), made with `pipeline/export_labels.py`. Never train on the benchmark.
 - `pipeline/generate.py` calls Claude through the CLI (`claude -p --tools "" --strict-mcp-config --no-session-persistence`); keep those flags on any new background call.
 - `pipeline/run.sh` never replaces a checkpoint; promoting is a manual copy after `evaluate.py compare` says PROMOTE.
 - No personal data in the repo: no real logged commands, personal catalogs, names or home-folder paths. The example catalog uses made-up apps.
@@ -37,9 +37,10 @@ TARS_HOME=/tmp/t app/build/Tars.app/Contents/MacOS/Tars --setup     # managed tr
 
 ```
 tars/        planner, HTTP server, catalog, the three questions (split/route/skill), model loading
-pipeline/    generate · build · train · evaluate · try · status · run.sh
+pipeline/    generate · export_labels · build · train · evaluate · try · status · run.sh
 catalogs/    example.json (made-up apps and skills)
-benchmark/   evaluate_benchmark.py
+benchmark/   evaluate_benchmark.py, public/benchmark.jsonl (held-out, 477 sentences)
+labels/      example.jsonl (Tars 0.5 training labels for the example catalog)
 app/         Tars Mac app
 tests/       unit tests for questions and catalog
 ```

@@ -40,8 +40,8 @@
     "revision": "3a34cbdfaa1e90f2a9eb6b3bfc5ac5c92a18cb01"
   },
   "tars": {
-    "name": "Tars 0.4",
-    "repo": "andrewneuwirth/tars-0.4",
+    "name": "Tars 0.5",
+    "repo": "andrewneuwirth/tars",
     "revision": "main"
   },
   "modelFiles": [

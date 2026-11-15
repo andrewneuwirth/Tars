@@ -31,19 +31,19 @@ milliseconds, and you fine-tune it on your own tools.
 > model. Tars is a full fine-tune of Von 1.2 and keeps Von's approach: no text generation, only a calibrated choice
 > among options you supply. See [NOTICE](NOTICE) and [MODEL_CARD.md](MODEL_CARD.md).
 
-| 65.0% | 352 ms | 395M | 3 |
+| 69.2% | 280 ms | 395M | 3 |
 |:---:|:---:|:---:|:---:|
 | hard multi-step commands fully right | median time for a whole plan | parameters, runs offline | questions, no text generation |
 
 ```
-"lock in timer 25 minutes put on my study playlist dnd on"
+"timer 25 minutes put on my study playlist dnd on"
 
-  → "lock in timer 25 minutes"  time   / timers               0.99
-  → "put on my study playlist"  media  / play_music_by_name   1.00
-  → "dnd on"                    mac    / do_not_disturb       0.94
+  → "timer 25 minutes"          time   / timers           1.00
+  → "put on my study playlist"  music  / play_music       1.00
+  → "dnd on"                    system / do_not_disturb   1.00
 ```
 
-(Output of Tars 0.4 on the catalog it was trained on.)
+(Output of Tars 0.5 on the example catalog.)
 
 ## What it decides
 
@@ -69,47 +69,57 @@ is a made-up example with 10 families and 31 skills.
 
 ## Results
 
-Measured on 480 hard multi-step commands, each asking for 2 to 4 things in one breath: missing joiners, "to" used
-as "and", back-references ("move it"), titles that contain command words ("play Stop Making Sense"), and three
-speaking styles kept out of training. A sentence counts only if every step's boundary, family and skill is right.
+Measured on the [public benchmark](benchmark/README.md): 477 hard multi-step commands for the example catalog, each
+asking for 2 to 5 things in one breath. They have missing joiners, "to" used as "and", back-references ("move it"),
+titles that contain command words ("play Stop Making Sense") and chatter mixed in, in three speaking styles kept out
+of training. No training sentence is a near-copy (80% or more word overlap) of a benchmark sentence. A sentence
+counts only if every step's words, family and skill are right.
 
 ```mermaid
 xychart-beta
-    title "Tars 0.4: sentences fully right (%)"
-    x-axis ["Split", "Route", "Skill", "Overall"]
-    y-axis "% of 480 sentences" 0 --> 100
-    bar [74.6, 66.0, 65.6, 65.0]
+    title "Tars 0.5: sentences fully right (%)"
+    x-axis ["Step count", "Split", "Route", "Skill", "Overall"]
+    y-axis "% of 477 sentences" 0 --> 100
+    bar [77.8, 71.3, 74.8, 74.8, 69.2]
 ```
 
-Von 1.2, the base model, scores 0.0% (split), 0.2% (route), 0.2% (skill) and 0.0% (overall) on the same sentences.
+Von 1.2, the base model, scores 1.7% (step count), 0.4% (split), 0.0% (route), 0.0% (skill) and 0.0% (overall) on
+the same sentences.
 
 ```mermaid
 xychart-beta
     title "Median time to plan a whole command (ms, lower is better)"
-    x-axis ["Von 1.2", "Tars 0.4"]
+    x-axis ["Von 1.2", "Tars 0.5"]
     y-axis "ms" 0 --> 800
-    bar [759, 352]
+    bar [791, 280]
 ```
 
-| Model | End to end | Clean subset* | Step count right | Split exact | Median latency |
-|---|---|---|---|---|---|
-| Von 1.2 (base, no fine-tune) | 0.0% | 0.0% | 1.9% | 0.0% | 759 ms |
-| **Tars 0.4** | **65.0%** | **61.2%** | **76.9%** | **74.6%** | **352 ms** |
+| Model | End to end | Step count right | Split exact | Families right | Skills right | Median latency |
+|---|---|---|---|---|---|---|
+| Von 1.2 (base, no fine-tune) | 0.0% | 1.7% | 0.4% | 0.0% | 0.0% | 791 ms |
+| **Tars 0.5** | **69.2%** | **77.8%** | **71.3%** | **74.8%** | **74.8%** | **280 ms** |
 
-\* 75 of the 480 sentences have a near-copy (≥80% word overlap) in the training data. The clean subset leaves them
-out and is the number to quote.
+Latency is the whole plan (every split, route and skill question), in-process on an Apple M5 Pro (MPS). General
+reasoning on Von's replay rows went from 84.3% to 91.2%, so fine-tuning didn't cause forgetting. Most remaining
+errors are extra splits: a filler or aside ("yo", "please") becomes its own step.
 
-Latency is the whole plan (every split, route and skill question), in-process on an Apple M5 Pro (MPS). Single-step
-commands take about 130–230 ms.
+Tars 0.5 is trained only on public data: the [labels](labels/example.jsonl) for the example catalog (8,432
+sentences written by Claude) plus Von's replay. Reproduce it with:
 
-The benchmark sentences and the Tars 0.4 weights are not in this repository: both are tied to the personal catalog
-the model was trained on. [`benchmark/evaluate_benchmark.py`](benchmark/README.md) scores any planner on your own
-benchmark file in the same way.
+```bash
+LABELS=labels/example.jsonl BUILD_FLAGS="--labels benchmark/public/benchmark.jsonl --general 13000" MINUTES=150 pipeline/run.sh
+python benchmark/evaluate_benchmark.py --catalog catalogs/example.json --file benchmark/public/benchmark.jsonl
+```
+
+Tars 0.4 scored 65.0% end to end on a private 480-sentence benchmark tied to a personal catalog. That benchmark and
+those weights are not in this repository, so the two numbers aren't directly comparable.
 
 ## Fine-tune it on your own tools
 
 The base model doesn't know your skills, so the useful version of Tars is the one you train. That takes labels:
-example commands with their correct steps and skills. Tars 0.4 used about 10,000 sentences written by an LLM.
+example commands with their correct steps and skills. Tars 0.5 used 8,432 sentences written by an LLM. Starting
+from Tars 0.5 instead of Von 1.2 (the app downloads it from Hugging Face) means the model already knows how to split
+and route.
 
 **The Tars Mac app** ([`app/`](app/README.md), [download](https://github.com/andrewneuwirth/Tars/releases/latest)) does the whole loop:
 
@@ -200,7 +210,8 @@ rules below it.
 tars/          planner, HTTP server, catalog, the three questions, model loading
 pipeline/      generate · build · train · evaluate · try · run.sh
 catalogs/      example.json (made-up apps and skills)
-benchmark/     evaluate_benchmark.py
+benchmark/     evaluate_benchmark.py, public/ (the held-out benchmark)
+labels/        example.jsonl (training labels for the example catalog)
 app/           the Tars Mac app (SwiftUI)
 tests/         python -m unittest discover -s tests
 ```
@@ -211,7 +222,7 @@ tests/         python -m unittest discover -s tests
   uses Von's option-marker model, training collator, loss and synthetic general-reasoning generator. Apache-2.0.
 - **[ModernBERT](https://github.com/AnswerDotAI/ModernBERT)** (Answer.AI and LightOn) is the encoder under Von.
   Apache-2.0.
-- Tars 0.4's training sentences were written by Anthropic's Claude. Check your provider's terms before
+- Tars's training sentences and benchmark were written by Anthropic's Claude. Check your provider's terms before
   redistributing generated data.
 
 Tars is released under the [Apache License 2.0](LICENSE).

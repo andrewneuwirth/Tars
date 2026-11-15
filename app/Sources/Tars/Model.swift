@@ -118,7 +118,7 @@ enum Files {
     static var env: URL { root.appendingPathComponent("env") }
     static var von: URL { root.appendingPathComponent("von") }
     static var baseModel: URL { root.appendingPathComponent("models/von-1.2") }
-    static var tarsModel: URL { root.appendingPathComponent("models/tars-0.4") }
+    static var tarsModel: URL { root.appendingPathComponent("models/tars") }
 
     static func loadCatalog(_ url: URL = catalog) -> Catalog? {
         (try? Data(contentsOf: url)).flatMap { try? JSONDecoder().decode(Catalog.self, from: $0) }

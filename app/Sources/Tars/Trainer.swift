@@ -34,7 +34,7 @@ enum Setup {
         get { let t = UserDefaults.standard.integer(forKey: "labelTarget"); return t > 0 ? t : 2000 }
         set { UserDefaults.standard.set(newValue, forKey: "labelTarget") }
     }
-    /// Start training from Tars 0.4 instead of Von 1.2 (when it has been downloaded).
+    /// Start training from the published Tars model instead of Von 1.2 (when it has been downloaded).
     static var startFromTars: Bool {
         get { UserDefaults.standard.bool(forKey: "startFromTars") }
         set { UserDefaults.standard.set(newValue, forKey: "startFromTars") }

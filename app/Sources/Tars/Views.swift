@@ -506,7 +506,7 @@ struct GenerateView: View {
 
     var body: some View {
         let gen = app.generator
-        Page(title: "Make Labels", subtitle: "Labels are example commands with the right steps and skills. A good model needs thousands; Tars 0.4 was trained on about 10,000.") {
+        Page(title: "Make Labels", subtitle: "Labels are example commands with the right steps and skills. A good model needs thousands; Tars 0.5 was trained on about 8,400.") {
             Problems(items: app.catalog.problems)
             Card(title: "With your AI provider", detail: "Your catalog and the prompts go to the provider you pick. Subscriptions run their own command line tool on this Mac; API keys stay in your Keychain.") {
                 SettingRow(title: "Provider") {
