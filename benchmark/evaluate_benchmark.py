@@ -65,13 +65,13 @@ def main() -> None:
         split_ok = n_ok and all(words(a["text"]) == words(g["text"]) for a, g in zip(steps, gold))
         fam_ok = n_ok and all(a.get("family") == g["family"] for a, g in zip(steps, gold))
         skill_ok = fam_ok and all(g["skill"] == "none" or a.get("skill") == g["skill"] for a, g in zip(steps, gold))
-        tally.update(sentences=1, count=n_ok, split=split_ok, family=fam_ok, full=skill_ok and split_ok)
+        tally.update(sentences=1, count=n_ok, split=split_ok, family=fam_ok, skill=skill_ok, full=skill_ok and split_ok)
         out.append({"said": it["said"], "gold": gold, "got": steps, "ok": skill_ok and split_ok})
     n = tally["sentences"]
     pct = lambda k: round(100 * tally[k] / n, 1)  # noqa: E731
     ms.sort()
     print(json.dumps({"sentences": n, "step_count": pct("count"), "split_exact": pct("split"),
-                      "families": pct("family"), "end_to_end": pct("full"),
+                      "families": pct("family"), "skills": pct("skill"), "end_to_end": pct("full"),
                       "median_ms": ms[len(ms) // 2] if ms else None}, indent=2))
     if args.out:
         with open(args.out, "w") as f:

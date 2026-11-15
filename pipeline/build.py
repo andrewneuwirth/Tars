@@ -157,12 +157,12 @@ def main() -> None:
     ap.add_argument("--replay", action="append", default=[], help="jsonl of earlier-task rows to keep (repeatable)")
     ap.add_argument("--replay-rows", type=int, default=7000)
     ap.add_argument("--seed", type=int, default=4)
-    ap.add_argument("--labels", help="jsonl of labeled sentences (see the docstring); used with or alongside data/raw")
+    ap.add_argument("--labels", action="append", default=[], help="jsonl of labeled sentences (see the docstring); used with or alongside data/raw (repeatable)")
     args = ap.parse_args()
     rng = random.Random(args.seed)
     cat = Catalog.load(args.catalog)
     b = Builder(cat, rng)
-    labels = read_jsonl(args.labels) if args.labels else []
+    labels = [it for path in args.labels for it in read_jsonl(path)]
 
     def read(kind: str) -> list[dict]:
         rows = read_jsonl(os.path.join(RAW, f"{kind}.jsonl"))

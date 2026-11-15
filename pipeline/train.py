@@ -223,7 +223,7 @@ def save(model, cal: dict, out: str, m: dict, base: dict, step: int) -> None:
     new_cal = dict(cal)
     new_cal.update({"model_id": "tars", "base_model": "von-1.2.0", "training": {
         "kind": "tars fine-tune (full)", "step": step, "val": m["val"], "val_replay": m["val_replay"],
-        "baseline": {k: base[k] for k in ("val", "val_replay", "test_style", "test_real")}, "timestamp": time.time()}})
+        "baseline": {k: None if base[k] != base[k] else base[k] for k in ("val", "val_replay", "test_style", "test_real")}, "timestamp": time.time()}})
     json.dump(new_cal, open(os.path.join(tmp, "marker_calibration.json"), "w"), indent=1)
     for extra in ("calibration.json", "README.md"):
         src = os.path.join(BASE, extra)

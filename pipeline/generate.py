@@ -5,7 +5,7 @@ point: today's model should score well under 90% on what this produces.
 Kinds of requests:
   single   one skill, messy real speech (training styles)           -> train/val
   held     one skill, 3 held-out speaking styles                    -> test_style
-  multi    2-4 step sentences across families, adversarial          -> train/val
+  multi    2-5 step sentences across families, adversarial          -> train/val
   multi_h  same, held-out styles, separate requests                 -> test_hard
   confuse  near-miss pairs across families + not-a-command talk     -> train/val
   real     your own logged sentences (--real file), labeled         -> test_real
@@ -112,7 +112,7 @@ Return ONLY a JSON array of objects: {{"said": "...", "style": "<one of the styl
 def multi_prompt(seed_keys: list[str], styles: list[str], n: int) -> str:
     return f"""{CAT.context}
 
-Write {n} sentences where the user asks for 2 to 4 things in ONE breath, across different apps/skills.
+Write {n} sentences where the user asks for 2 to 5 things in ONE breath, across different apps/skills.
 Draw steps from any of these skills (use each seed skill at least once across the set):
 {skill_list(seed_keys)}
 and also freely from the rest of Tars:
@@ -165,25 +165,25 @@ Return ONLY a JSON array, one object per sentence in order:
 
 # --- plan -------------------------------------------------------------------------------
 
-def plan(rng: random.Random, real_path: str | None = None) -> list[dict]:
+def plan(rng: random.Random, real_path: str | None = None, scale: float = 1.0) -> list[dict]:
     jobs = []
     keys = list(SKILLS)
     for k in keys:
-        jobs.append({"kind": "single", "id": f"single-{k}", "prompt": single_prompt(k, rng.sample(TRAIN_STYLES, 5), 30)})
+        jobs.append({"kind": "single", "id": f"single-{k}", "prompt": single_prompt(k, rng.sample(TRAIN_STYLES, 5), round(30 * scale))})
         jobs.append({"kind": "held", "id": f"held-{k}", "prompt": single_prompt(k, HELD, 6)})
     fams = sorted({s["family"] for s in SKILLS.values()})
-    for i in range(110):
+    for i in range(round(110 * scale)):
         seeds = rng.sample(keys, 5)
         jobs.append({"kind": "multi", "id": f"multi-{i}", "prompt": multi_prompt(seeds, rng.sample(TRAIN_STYLES, 4), 25)})
     for i in range(24):
         seeds = rng.sample(keys, 5)
         jobs.append({"kind": "multi_h", "id": f"multih-{i}", "prompt": multi_prompt(seeds, HELD, 20)})
     pairs = []
-    for _ in range(300):
+    for _ in range(round(300 * scale)):
         a, b = rng.sample(keys, 2)
         if SKILLS[a]["family"] != SKILLS[b]["family"] or rng.random() < 0.3:
             pairs.append((a, b))
-    for i in range(0, 240, 8):
+    for i in range(0, round(240 * scale), 8):
         jobs.append({"kind": "confuse", "id": f"confuse-{i}", "prompt": confuse_prompt(pairs[i:i + 8], 30)})
     real = [l.strip() for l in open(real_path) if l.strip()] if real_path else []
     for i in range(0, len(real), 25):
@@ -198,12 +198,13 @@ def main() -> None:
     ap.add_argument("--workers", type=int, default=5)
     ap.add_argument("--only", default="", help="comma list of kinds")
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--scale", type=float, default=1.0, help="more training data: x sentences per single-skill request, x as many multi and confuse requests (test sets stay the same size)")
     args = ap.parse_args()
     global CAT, FAMILIES, SKILLS
     CAT = Catalog.load(args.catalog)
     FAMILIES, SKILLS = CAT.families, CAT.skills
     os.makedirs(RAW, exist_ok=True)
-    jobs = plan(random.Random(4), args.real)
+    jobs = plan(random.Random(4), args.real, args.scale)
     if args.only:
         jobs = [j for j in jobs if j["kind"] in args.only.split(",")]
     done_ids = set()
