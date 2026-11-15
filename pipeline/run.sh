@@ -7,6 +7,7 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 export PYTHONUNBUFFERED=1
+# zsh: unquoted ${X} is one word (paths with spaces stay whole); ${=X} splits the flag lists.
 # Apple GPUs: cap MPS memory so a long run can't swamp the machine.
 export PYTORCH_MPS_HIGH_WATERMARK_RATIO=${MPS_HIGH:-0.6} PYTORCH_MPS_LOW_WATERMARK_RATIO=${MPS_LOW:-0.5}
 PY=${PYTHON:-python}
@@ -20,14 +21,14 @@ trap 'st stopped "Stopped"; exit 130' INT TERM
   st starting
   if [ -z "${LABELS:-}" ]; then
     st generating "Claude writes hard, multi-step commands (no tools)"
-    $PY pipeline/generate.py --catalog "$CATALOG" --workers ${WORKERS:-6} ${REAL:+--real "$REAL"} || fail "generation"
+    $PY pipeline/generate.py --catalog "$CATALOG" --workers ${WORKERS:-6} ${REAL:+--real} ${REAL:-} || fail "generation"
   fi
   st building "Split, route and skill questions"
-  $PY pipeline/build.py --catalog "$CATALOG" ${LABELS:+--labels "$LABELS"} ${REPLAY:+--replay "$REPLAY"} ${BUILD_FLAGS:-} || fail "dataset build"
+  $PY pipeline/build.py --catalog "$CATALOG" ${LABELS:+--labels} ${LABELS:-} ${REPLAY:+--replay} ${REPLAY:-} ${=BUILD_FLAGS:-} || fail "dataset build"
   st evaluating "Baseline on the test sets"
   $PY pipeline/evaluate.py baseline || fail "baseline"
   st training "Full fine-tune"
-  nice -n 5 $PY pipeline/train.py --minutes ${MINUTES:-100} --batch-size ${BATCH:-8} --grad-accum ${ACCUM:-4} ${TRAIN_FLAGS:-} || fail "training"
+  nice -n 5 $PY pipeline/train.py --minutes ${MINUTES:-100} --batch-size ${BATCH:-8} --grad-accum ${ACCUM:-4} ${=TRAIN_FLAGS:-} || fail "training"
   st evaluating "Base vs candidate on sentences it never saw"
   $PY pipeline/evaluate.py compare || fail "evaluation"
   st done "Finished: read the verdict"

@@ -1,0 +1,15 @@
+{
+  "originHash" : "47d8b0ae0404aa4b480583ef0e9e4c92bf3985037da9dee81cebf37e4eee968a",
+  "pins" : [
+    {
+      "identity" : "mac-tools-kit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/andrewneuwirth/mac-tools-kit.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "7c568ed50b82ee46f6fe9c4874dddd23152cc33d"
+      }
+    }
+  ],
+  "version" : 3
+}

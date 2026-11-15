@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import time
 from collections import defaultdict
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -35,7 +36,10 @@ def score(ckpt: str) -> dict:
         if not rows:
             continue
         by_kind, by_sid = defaultdict(lambda: [0, 0]), defaultdict(lambda: True)
-        for r, (pid, _) in zip(rows, predict(model, rows)):
+        t0 = time.perf_counter()
+        preds = predict(model, rows)
+        ms = (time.perf_counter() - t0) * 1000 / len(rows)
+        for r, (pid, _) in zip(rows, preds):
             ok = pid == r["label"]
             k = r.get("kind", "general")
             by_kind[k][0] += ok
@@ -45,6 +49,7 @@ def score(ckpt: str) -> dict:
         res = {k: round(100 * a / n, 1) for k, (a, n) in by_kind.items()}
         res["all"] = round(100 * sum(a for a, _ in by_kind.values()) / sum(n for _, n in by_kind.values()), 1)
         res["n"] = len(rows)
+        res["ms_per_question"] = round(ms, 1)  # batched, so a lower bound on one live question
         if by_sid:
             res["sentence"] = round(100 * sum(by_sid.values()) / len(by_sid), 1)
             res["sentences"] = len(by_sid)

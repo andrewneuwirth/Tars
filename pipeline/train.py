@@ -56,7 +56,7 @@ def main() -> None:
     random.seed(args.seed)
     torch.manual_seed(args.seed)
     dev = device()
-    run_dir = os.path.join(HERE, "..", "runs", time.strftime("%Y%m%d-%H%M%S"))
+    run_dir = os.path.join(os.environ.get("TARS_RUNS", os.path.join(HERE, "..", "runs")), time.strftime("%Y%m%d-%H%M%S"))
     os.makedirs(run_dir, exist_ok=True)
     log_f = open(os.path.join(run_dir, "train.log"), "w")
 
