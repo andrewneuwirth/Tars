@@ -12,35 +12,47 @@ struct SettingsView: View {
 
     var body: some View {
         Page(title: "Settings", subtitle: "Training setup, and the AI providers that write labels.") {
+            SectionHeader(title: "Training")
             SetupCard(installer: app.installer)
             Card(title: "Start from Tars 0.4") { TarsWeightsRow(app: app) }
-            Card(title: "Advanced") {
-                Toggle("Use my own environment (a Tars checkout, Python and Von I manage myself)", isOn: $useOwn)
-                    .onChange(of: useOwn) { Setup.useOwn = useOwn }
+            SectionHeader(title: "AI providers").padding(.top, 6)
+            Card(padding: 0) {
+                VStack(spacing: 0) {
+                    ForEach(Array(AIProvider.allCases.enumerated()), id: \.element) { i, p in
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack(spacing: 10) {
+                                MenuIconView(icon: p.icon)
+                                Text(p.title).font(.ui(13.5, .medium))
+                                Spacer()
+                                let st = p.status
+                                StatusPill(ok: st == .ready, text: st.title)
+                                Button(editing == p ? "Done" : "Set Up") { withAnimation(.easeOut(duration: 0.15)) { editing = editing == p ? nil : p } }
+                                    .buttonStyle(DButton(kind: editing == p ? .primary : .secondary, small: true))
+                            }
+                            if editing == p { ProviderSetup(provider: p) { tick += 1 } }
+                        }
+                        .padding(.horizontal, 18).padding(.vertical, 12)
+                        if i < AIProvider.allCases.count - 1 { Rectangle().fill(Look.line).frame(height: 1).padding(.leading, 18) }
+                    }
+                }
+                .id(tick)
+            }
+            SectionHeader(title: "Advanced").padding(.top, 6)
+            Card {
+                SettingRow(title: "Use my own environment", detail: "A Tars checkout, Python and Von I manage myself.", last: !useOwn) {
+                    DSwitch(label: "Use my own environment", on: $useOwn)
+                        .onChange(of: useOwn) { Setup.useOwn = useOwn }
+                }
                 if useOwn {
                     PathRow(title: "Tars folder", detail: "The checkout with pipeline/run.sh", path: $repo, directory: true) { Setup.ownRepo = $0 }
                     PathRow(title: "Python", detail: "A Python 3.12+ with torch, transformers and Von installed", path: $python, directory: false) { Setup.ownPython = $0 }
                     PathRow(title: "Von folder", detail: "github.com/wfzyx/von with checkpoints/von-1.2", path: $von, directory: true) { Setup.ownVon = $0 }
                     Problems(items: Setup.problems())
                 }
-                Text("Your data: \((Files.root.path as NSString).abbreviatingWithTildeInPath)").font(.caption).foregroundStyle(Color.mtInkMuted).textSelection(.enabled)
-            }
-            Card(title: "AI providers") {
-                ForEach(AIProvider.allCases) { p in
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text(p.title)
-                            Spacer()
-                            let st = p.status
-                            Label(st.title, systemImage: st == .ready ? "checkmark.circle.fill" : "exclamationmark.circle")
-                                .foregroundStyle(st == .ready ? Color.mtGood : Color.mtWarn).font(.callout)
-                            Button(editing == p ? "Done" : "Set Up") { editing = editing == p ? nil : p }
-                        }
-                        if editing == p { ProviderSetup(provider: p) { tick += 1 } }
-                        Divider()
-                    }
+                HStack(spacing: 6) {
+                    Image(systemName: "folder").font(.ui(11.5)).foregroundStyle(Look.muted)
+                    Text("Your data: \((Files.root.path as NSString).abbreviatingWithTildeInPath)").font(.ui(12)).foregroundStyle(Look.muted).textSelection(.enabled)
                 }
-                .id(tick)
             }
         }
     }
@@ -53,17 +65,19 @@ struct PathRow: View {
     let directory: Bool
     let save: (String) -> Void
     var body: some View {
-        HStack {
+        HStack(spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                Text(detail).font(.caption).foregroundStyle(Color.mtInkMuted)
-            }.frame(width: 260, alignment: .leading)
-            TextField("", text: $path).textFieldStyle(.roundedBorder).onSubmit { save(path) }.onChange(of: path) { save(path) }
+                Text(title).font(.ui(13, .medium))
+                Text(detail).font(.ui(11.5)).foregroundStyle(Look.muted).fixedSize(horizontal: false, vertical: true)
+            }.frame(width: 240, alignment: .leading)
+            DField(placeholder: directory ? "Folder path" : "File path", text: $path, mono: true) { save(path) }
+                .onChange(of: path) { save(path) }
             Button("Choose…") {
                 let panel = NSOpenPanel()
                 panel.canChooseDirectories = directory; panel.canChooseFiles = !directory; panel.showsHiddenFiles = true
                 if panel.runModal() == .OK, let u = panel.url { path = u.path; save(path) }
             }
+            .buttonStyle(DButton(small: true))
         }
     }
 }
@@ -82,35 +96,38 @@ struct ProviderSetup: View {
         VStack(alignment: .leading, spacing: 8) {
             if provider.usesAPI {
                 if provider == .compatible {
-                    TextField("Base URL (Ollama: http://localhost:11434/v1)", text: $base).textFieldStyle(.roundedBorder)
+                    DField(placeholder: "Base URL (Ollama: http://localhost:11434/v1)", text: $base, mono: true)
                         .onChange(of: base) { AISettings.baseURL = base; changed() }
                 }
-                TextField("Model (\(provider.defaultModel))", text: $model).textFieldStyle(.roundedBorder)
+                DField(placeholder: "Model (\(provider.defaultModel))", text: $model)
                     .onChange(of: model) { AISettings.setModel(model, for: provider) }
-                HStack {
-                    SecureField(Keychain.get(provider.rawValue) == nil ? "Paste your API key" : "Replace key", text: $key).textFieldStyle(.roundedBorder)
+                HStack(spacing: 8) {
+                    DField(placeholder: Keychain.get(provider.rawValue) == nil ? "Paste your API key" : "Replace key", text: $key, symbol: "key", secure: true)
                     Button("Save") { Keychain.set(key.trimmingCharacters(in: .whitespacesAndNewlines), for: provider.rawValue); key = ""; changed() }
+                        .buttonStyle(DButton(kind: .primary, small: true))
                         .disabled(key.trimmingCharacters(in: .whitespaces).isEmpty)
-                    if Keychain.get(provider.rawValue) != nil { Button("Remove", role: .destructive) { Keychain.delete(provider.rawValue); changed() } }
+                    if Keychain.get(provider.rawValue) != nil { Button("Remove", role: .destructive) { Keychain.delete(provider.rawValue); changed() }.buttonStyle(DButton(kind: .danger, small: true)) }
                 }
-                Text("Kept in your Keychain, never in settings files.").font(.caption).foregroundStyle(Color.mtInkMuted)
+                Text("Kept in your Keychain, never in settings files.").font(.ui(12)).foregroundStyle(Look.muted)
             } else if let path = AI.tool(provider) {
                 Text(provider == .claude ? "Runs on your Claude plan. Sign in once by running claude in Terminal."
                      : provider == .chatgpt ? "Runs on your ChatGPT plan. Sign in once with codex login in Terminal."
-                     : "Sign in once by running gemini in Terminal.").font(.caption).foregroundStyle(Color.mtInkMuted)
-                Text(path).font(.caption.monospaced()).foregroundStyle(Color.mtInkMuted)
+                     : "Sign in once by running gemini in Terminal.").font(.ui(12)).foregroundStyle(Look.muted)
+                Text(path).font(.system(size: 11.5, design: .monospaced)).foregroundStyle(Look.muted)
             } else {
                 Text(provider == .claude ? "Install Claude Code (claude.com/code), then run claude once to sign in."
                      : provider == .chatgpt ? "In Terminal: brew install codex, then codex login."
-                     : "In Terminal: brew install gemini-cli, then run gemini once to sign in.").font(.caption).foregroundStyle(Color.mtInkMuted)
+                     : "In Terminal: brew install gemini-cli, then run gemini once to sign in.").font(.ui(12)).foregroundStyle(Look.muted)
             }
-            HStack {
-                Button(testing ? "Testing…" : "Test") { test() }.disabled(testing)
-                if let result { Text(result.text).font(.caption).foregroundStyle(result.ok ? Color.mtGood : Color.mtBad).lineLimit(3).textSelection(.enabled) }
+            HStack(spacing: 10) {
+                Button { test() } label: { Label(testing ? "Testing…" : "Test", systemImage: "bolt") }.buttonStyle(DButton(small: true)).disabled(testing)
+                if testing { Pulse() }
+                if let result { Text(result.text).font(.ui(12)).foregroundStyle(result.ok ? Color.mtGood : Color.mtBad).lineLimit(3).textSelection(.enabled) }
             }
         }
-        .padding(12)
-        .background(RoundedRectangle(cornerRadius: MT.Radius.row).fill(Color.mtFillInset))
+        .padding(14)
+        .background(RoundedRectangle(cornerRadius: 12).fill(Look.field))
+        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Look.line))
         .onAppear { model = (UserDefaults.standard.dictionary(forKey: "aiModels") as? [String: String])?[provider.rawValue] ?? "" }
     }
 
@@ -132,23 +149,44 @@ struct SetupCard: View {
     var body: some View {
         Card(title: "Training setup") {
             if Installer.ready && installer.state != .running {
-                Label("Ready. Training runs on this Mac and works offline.", systemImage: "checkmark.circle.fill").foregroundStyle(Color.mtGood)
-                Text("Python \(Manifest.shared.python), PyTorch and Von 1.2 are in \((Files.root.path as NSString).abbreviatingWithTildeInPath).").font(.caption).foregroundStyle(Color.mtInkMuted)
+                HStack(spacing: 10) {
+                    StatusPill(ok: true, text: "Ready")
+                    Text("Training runs on this Mac and works offline.").font(.ui(13))
+                }
+                Text("Python \(Manifest.shared.python), PyTorch and Von 1.2 are in \((Files.root.path as NSString).abbreviatingWithTildeInPath).").font(.ui(12)).foregroundStyle(Look.muted)
             } else {
                 Text("Setting up training downloads \(Installer.downloadSize) once: Python, PyTorch, Von's code and the Von 1.2 base model. After that, training works offline.")
-                    .foregroundStyle(Color.mtInkMuted).fixedSize(horizontal: false, vertical: true)
+                    .font(.ui(13)).foregroundStyle(Look.muted).fixedSize(horizontal: false, vertical: true)
                 switch installer.state {
                 case .running:
-                    ProgressView(value: installer.fraction) { Text(installer.step) } currentValueLabel: { Text(installer.detail).lineLimit(1) }
-                    Button("Cancel") { installer.cancel() }
+                    InstallProgress(step: installer.step, detail: installer.detail, fraction: installer.fraction)
+                    Button("Cancel") { installer.cancel() }.buttonStyle(DButton(small: true))
                 case .failed(let why):
-                    Label(why, systemImage: "xmark.octagon").foregroundStyle(Color.mtBad).textSelection(.enabled).font(.callout)
-                    Button("Retry") { installer.start() }.buttonStyle(.borderedProminent)
+                    Notice(text: why, symbol: "xmark.octagon.fill", tint: .mtBad)
+                    Button { installer.start() } label: { Label("Retry", systemImage: "arrow.clockwise") }.buttonStyle(DButton(kind: .primary))
                 default:
-                    Button("Set Up Training") { installer.start() }.buttonStyle(.borderedProminent)
+                    Button { installer.start() } label: { Label("Set Up Training", systemImage: "arrow.down.circle") }.buttonStyle(DButton(kind: .primary))
                 }
             }
         }
+    }
+}
+
+struct InstallProgress: View {
+    let step: String
+    let detail: String
+    let fraction: Double
+    var body: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            HStack {
+                Text(step).font(.ui(12.5, .medium)).lineLimit(1)
+                Spacer()
+                Text("\(Int(fraction * 100))%").font(.ui(12)).foregroundStyle(Look.muted).monospacedDigit()
+            }
+            DProgress(value: fraction)
+            if !detail.isEmpty { Text(detail).font(.ui(11.5)).foregroundStyle(Look.muted).lineLimit(1) }
+        }
+        .padding(14).background(RoundedRectangle(cornerRadius: 12).fill(Look.field))
     }
 }
 
@@ -160,15 +198,18 @@ struct TarsWeightsRow: View {
         let have = FileManager.default.fileExists(atPath: Files.tarsModel.appendingPathComponent("option_marker.pt").path)
         let w = app.tarsWeights
         Text("Tars 0.4 already knows how to split commands and route them. Starting from it can need fewer labels than starting from Von 1.2. About 3.2 GB, from huggingface.co/\(Manifest.shared.tars.repo).")
-            .font(.caption).foregroundStyle(Color.mtInkMuted).fixedSize(horizontal: false, vertical: true)
+            .font(.ui(12.5)).foregroundStyle(Look.muted).fixedSize(horizontal: false, vertical: true)
         if have {
-            Toggle("Start training from Tars 0.4", isOn: $startFrom).onChange(of: startFrom) { Setup.startFromTars = startFrom }
+            SettingRow(title: "Start training from Tars 0.4", last: true) {
+                DSwitch(label: "Start training from Tars 0.4", on: $startFrom)
+                    .onChange(of: startFrom) { Setup.startFromTars = startFrom }
+            }
         } else if w.state == .running {
-            ProgressView(value: w.fraction) { Text(w.step) } currentValueLabel: { Text(w.detail) }
-            Button("Cancel") { w.cancel() }
+            InstallProgress(step: w.step, detail: w.detail, fraction: w.fraction)
+            Button("Cancel") { w.cancel() }.buttonStyle(DButton(small: true))
         } else {
-            if case .failed(let why) = w.state { Text(why).font(.callout).foregroundStyle(Color.mtBad) }
-            Button("Download Tars 0.4") { w.startTars() }.disabled(app.demo)
+            if case .failed(let why) = w.state { Notice(text: why, symbol: "xmark.octagon.fill", tint: .mtBad) }
+            Button { w.startTars() } label: { Label("Download Tars 0.4", systemImage: "arrow.down.circle") }.buttonStyle(DButton()).disabled(app.demo)
         }
     }
 }
@@ -199,32 +240,60 @@ struct OnboardingView: View {
 
     var body: some View {
         let p = pages[page]
-        VStack(spacing: MT.Space.s18) {
-            Image(systemName: p.symbol).font(.system(size: 44, weight: .semibold)).foregroundStyle(Color.accentColor).frame(height: 60)
-            Text(p.title).font(.system(size: 22, weight: .semibold))
-            Text(p.text).multilineTextAlignment(.center).foregroundStyle(Color.mtInkMuted).frame(maxWidth: 440).fixedSize(horizontal: false, vertical: true)
-            if page == 1 {
-                Button("Start from the Example Catalog") { app.loadExample(); page += 1 }.disabled(!app.catalog.skills.isEmpty)
-            }
-            if page == pages.count - 1 && !Installer.ready {
-                if app.installer.state == .running {
-                    ProgressView(value: app.installer.fraction) { Text(app.installer.step).font(.caption) }.frame(maxWidth: 380)
-                } else {
-                    Button("Set Up Training Now (downloads \(Installer.downloadSize))") { app.installer.start() }
-                    Text("You can also do this later from the Train page.").font(.caption).foregroundStyle(Color.mtInkMuted)
+        VStack(spacing: 0) {
+            VStack(spacing: 14) {
+                Group {
+                    if page == 0 {
+                        Image(nsImage: AppIcon.image).resizable().interpolation(.high).frame(width: 76, height: 76)
+                            .shadow(color: .black.opacity(0.15), radius: 4, y: 2)
+                    } else {
+                        RoundedRectangle(cornerRadius: 16).fill(Look.ink).frame(width: 60, height: 60)
+                            .overlay(Image(systemName: p.symbol).font(.ui(24, .semibold)).foregroundStyle(Look.onInk))
+                    }
+                }
+                .frame(height: 78)
+                .accessibilityHidden(true)
+                Text(p.title).font(.ui(22, .semibold)).multilineTextAlignment(.center)
+                Text(p.text).font(.ui(13.5)).lineSpacing(2).multilineTextAlignment(.center).foregroundStyle(Look.muted)
+                    .frame(maxWidth: 460).fixedSize(horizontal: false, vertical: true)
+                if page == 1 {
+                    Button { app.loadExample(); page += 1 } label: { Label("Start from the Example Catalog", systemImage: "square.grid.2x2") }
+                        .buttonStyle(DButton()).disabled(!app.catalog.skills.isEmpty).padding(.top, 4)
+                }
+                if page == pages.count - 1 && !Installer.ready {
+                    if app.installer.state == .running {
+                        InstallProgress(step: app.installer.step, detail: "", fraction: app.installer.fraction).frame(maxWidth: 380)
+                    } else {
+                        VStack(spacing: 6) {
+                            Button { app.installer.start() } label: { Label("Set Up Training Now (\(Installer.downloadSize))", systemImage: "arrow.down.circle") }
+                                .buttonStyle(DButton())
+                            Text("You can also do this later from the Train page.").font(.ui(12)).foregroundStyle(Look.muted)
+                        }
+                        .padding(.top, 4)
+                    }
                 }
             }
+            .padding(.horizontal, 36).padding(.top, 34)
             Spacer(minLength: 0)
-            HStack {
-                HStack(spacing: 6) { ForEach(pages.indices, id: \.self) { i in Circle().fill(i == page ? Color.accentColor : Color.mtRingTrack).frame(width: 7, height: 7) } }
+            HStack(spacing: 8) {
+                HStack(spacing: 6) {
+                    ForEach(pages.indices, id: \.self) { i in
+                        Capsule().fill(i == page ? Look.ink : Look.track).frame(width: i == page ? 18 : 7, height: 7)
+                    }
+                }
+                .animation(.easeOut(duration: 0.2), value: page)
+                .accessibilityElement().accessibilityLabel("Page \(page + 1) of \(pages.count)")
                 Spacer()
-                if page > 0 { Button("Back") { page -= 1 } }
+                if page > 0 { Button("Back") { page -= 1 }.buttonStyle(DButton()) }
                 Button(page == pages.count - 1 ? "Get Started" : "Continue") { page == pages.count - 1 ? finish() : (page += 1) }
-                    .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
+                    .buttonStyle(DButton(kind: .primary)).keyboardShortcut(.defaultAction)
             }
+            .padding(.horizontal, 24).padding(.vertical, 16)
+            .background(Look.canvas)
+            .overlay(alignment: .top) { Rectangle().fill(Look.line).frame(height: 1) }
         }
-        .padding(MT.Space.s26 + 6)
-        .frame(width: 600, height: 400)
-        .background(Color.mtSurface)
+        .frame(width: 600, height: 420)
+        .background(Look.panel)
+        .tint(Look.ink)
     }
 }

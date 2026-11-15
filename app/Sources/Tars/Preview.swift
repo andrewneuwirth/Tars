@@ -11,9 +11,9 @@ enum Preview {
         let app = AppModel(demo: true)
         let size = NSSize(width: 1200, height: 820)
         var shots: [(String, AnyView, NSSize)] = Section.allCases.enumerated().map { i, s in
-            ("\(i + 1)-\(s.rawValue.lowercased().replacingOccurrences(of: " ", with: "-"))", AnyView(RootView(app: app, section: s, showOnboarding: false, plainSidebar: true)), size)
+            ("\(i + 1)-\(s.rawValue.lowercased().replacingOccurrences(of: " ", with: "-"))", AnyView(RootView(app: app, section: s, showOnboarding: false)), size)
         }
-        for step in 0..<4 { shots.append(("0-onboarding-\(step + 1)", AnyView(OnboardingView(app: app, step: step) {}), NSSize(width: 600, height: 400))) }
+        for step in 0..<4 { shots.append(("0-onboarding-\(step + 1)", AnyView(OnboardingView(app: app, step: step) {}), NSSize(width: 600, height: 420))) }
         var written = 0
         for appearance in [NSAppearance.Name.aqua, .darkAqua] {
             for (name, view, size) in shots {

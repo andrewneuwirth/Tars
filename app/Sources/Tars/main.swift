@@ -72,6 +72,7 @@ struct TarsApp: App {
             RootView(app: app)
                 .frame(minWidth: 980, minHeight: 640)
         }
+        .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 1200, height: 820)
     }
 }
